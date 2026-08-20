@@ -48,7 +48,9 @@ begin
   end process;
  
   tick <= '1' when cnt = tick_max else '0';
-  p_tick <= '1' when pix_cnt = 0 else '0';
+  -- Hold the pixel tick low while reset is asserted so VGA timing does not
+  -- collapse to the system clock rate during reset.
+  p_tick <= '0' when reset = '1' else '1' when pix_cnt = 0 else '0';
  
 end architecture rtl;
  

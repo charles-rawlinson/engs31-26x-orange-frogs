@@ -92,6 +92,8 @@ begin
                     end if;
 
                 when COMMIT =>
+                    next_row_index <= 0;
+                    next_col_index <= 0;
                     next_state <= HOLD;
 
                 when others =>
@@ -103,7 +105,6 @@ begin
     output_logic : process(current_state, row_index, col_index, grid_reg, neighbor_count_sig, reset)
     begin
         if reset = '1' then
-            init_pattern(grid_reg);
             cell_next_val <= '0';
         elsif current_state = EVALUATE then
             if (grid_reg(row_index, col_index) = '1' and neighbor_count_sig = 2) or (neighbor_count_sig = 3) then
@@ -122,42 +123,66 @@ begin
         end loop;
     end process output_logic;
 
-    neighbor_count_process : process(grid_reg, row_index, col_index)
+    update_reg : process(clk)
     begin
-        neighbor_count_next <= 0;
+        if rising_edge(clk) then
+            if reset = '1' then
+                init_pattern(grid_reg);
+                next_grid_sig <= (others => (others => '0'));
+                row_index <= 0;
+                col_index <= 0;
+            else
+                row_index <= next_row_index;
+                col_index <= next_col_index;
+
+                if current_state = EVALUATE then
+                    next_grid_sig(row_index, col_index) <= cell_next_val;
+                elsif current_state = COMMIT then
+                    grid_reg <= next_grid_sig;
+                end if;
+            end if;
+        end if;
+    end process update_reg;
+
+    neighbor_count_process : process(grid_reg, row_index, col_index)
+        variable count : integer range 0 to 8;
+    begin
+        count := 0;
 
         -- Top-left
         if row_index > 0 and col_index > 0 and grid_reg(row_index - 1, col_index - 1) = '1' then
-            neighbor_count_next <= neighbor_count_next + 1;
+            count := count + 1;
         end if;
         -- Top
         if row_index > 0 and grid_reg(row_index - 1, col_index) = '1' then
-            neighbor_count_next <= neighbor_count_next + 1;
+            count := count + 1;
         end if;
         -- Top-right
         if row_index > 0 and col_index < cols - 1 and grid_reg(row_index - 1, col_index + 1) = '1' then
-            neighbor_count_next <= neighbor_count_next + 1;
+            count := count + 1;
         end if;
         -- Left
         if col_index > 0 and grid_reg(row_index, col_index - 1) = '1' then
-            neighbor_count_next <= neighbor_count_next + 1;
+            count := count + 1;
         end if;
         -- Right
         if col_index < cols - 1 and grid_reg(row_index, col_index + 1) = '1' then
-            neighbor_count_next <= neighbor_count_next + 1;
+            count := count + 1;
         end if;
         -- Bottom-left
         if row_index < rows - 1 and col_index > 0 and grid_reg(row_index + 1, col_index - 1) = '1' then
-            neighbor_count_next <= neighbor_count_next + 1;
+            count := count + 1;
         end if;
         -- Bottom
         if row_index < rows - 1 and grid_reg(row_index + 1, col_index) = '1' then
-            neighbor_count_next <= neighbor_count_next + 1;
+            count := count + 1;
         end if;
         -- Bottom-right
         if row_index < rows - 1 and col_index < cols - 1 and grid_reg(row_index + 1, col_index + 1) = '1' then
-            neighbor_count_next <= neighbor_count_next + 1;
+            count := count + 1;
         end if;
+
+        neighbor_count_next <= count;
     end process neighbor_count_process;
 
     neighbor_count_sig <= neighbor_count_next;
