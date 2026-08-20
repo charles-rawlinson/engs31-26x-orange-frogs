@@ -34,6 +34,7 @@ port	(
 	--OUTPUT PORTS
 	hsync_port		: out std_logic;			-- to display
 	vsync_port		: out std_logic;			-- to display
+	video_on		: out std_logic
 	);
 end vga_sync;
 --=============================================================

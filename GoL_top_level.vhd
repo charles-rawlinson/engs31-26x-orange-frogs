@@ -18,7 +18,8 @@ architecture arch of top is
 			clk	: in std_logic;
 			reset	: in std_logic;
 			hsync	: out std_logic;
-			vsync	: out std_logic
+			vsync	: out std_logic;
+			video_on	: out std_logic
 		);
 	end component;
 
@@ -30,13 +31,14 @@ architecture arch of top is
 		clk=>clk,
 		reset_db=>reset,
 		hsync_port=>vga_hs,
-		vsync_port=>vga_vs
+		vsync_port=>vga_vs,
+		video_on=>video_on
 	);
 
 	--processes
-	pick_colour : process(video_on, mode_edit, on_cursor, on_border, cell_alive)
+	pick_colour : process(video_on)
 	begin
-		red <= "0000"; grn <= "0000"; blu <= "0000";
+		red <= "0000"; grn <= "1111"; blu <= "0000";
 		end if;
 	end process;
 
