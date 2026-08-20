@@ -40,7 +40,24 @@ architecture rtl of game_logic is
     --=========================================================
     type grid_t is array (0 to rows - 1, 0 to cols - 1) of std_logic;
 
-    signal grid_reg        : grid_t := (others => (others => '0'));
+    -- initial pattern
+    constant init_pattern : grid_t := (
+        10 => (10 => '1', 11 => '1', 12 => '1', others => '0'),
+        11 => (12 => '1', others => '0'),
+        12 => (11 => '1', others => '0'),
+
+        18 => (15 => '1', 16 => '1', others => '0'),
+        19 => (15 => '1', 17 => '1', others => '0'),
+        20 => (15 => '1', others => '0'),
+
+        23 => (23 => '1', others => '0'),
+        24 => (24 => '1', others => '0'),
+        25 => (22 => '1', 23 => '1', 24 => '1', others => '0'),
+
+        others => (others => '0')
+    );
+
+    signal grid_reg        : grid_t := init_pattern;
     signal next_grid_sig   : grid_t := (others => (others => '0'));
     signal neighbor_count_next : integer range 0 to 8 := 0;
     signal count_sig       : integer range 0 to 8 := 0;
@@ -56,25 +73,6 @@ architecture rtl of game_logic is
     signal next_col_index  : integer range 0 to cols - 1 := 0;
     signal neighbor_count_sig : integer range 0 to 8 := 0;
     signal cell_next_val   : std_logic := '0';
-
-    -- initial pattern
-    procedure init_pattern(signal g : out grid_t) is
-    begin
-        for r in 0 to rows - 1 loop
-            for c in 0 to cols - 1 loop
-                g(r, c) <= '0';
-            end loop;
-        end loop;
-
-        g(10, 10) <= '1'; g(10, 11) <= '1'; g(10, 12) <= '1';
-        g(11, 12) <= '1'; g(12, 11) <= '1';
-
-        g(18, 15) <= '1'; g(19, 15) <= '1'; g(20, 15) <= '1';
-        g(18, 16) <= '1'; g(19, 17) <= '1';
-
-        g(25, 22) <= '1'; g(25, 23) <= '1'; g(25, 24) <= '1';
-        g(24, 24) <= '1'; g(23, 23) <= '1';
-    end procedure;
 
 begin
 
@@ -156,7 +154,7 @@ begin
     begin
         if rising_edge(clk) then
             if reset = '1' then
-                init_pattern(grid_reg);
+                grid_reg <= init_pattern;
                 next_grid_sig <= (others => (others => '0'));
                 row_index <= 0;
                 col_index <= 0;
