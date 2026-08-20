@@ -134,10 +134,10 @@ begin
                 if x_cell < 40 and y_cell < 30 and index >= 0 and index < 1200 and game_grid(index) = '1' then
                     red <= "0000"; grn <= "1111"; blu <= "0000";
                 else
-                    red <= "1000"; grn <= "1000"; blu <= "1000";
+                    red <= "1000"; grn <= "0000"; blu <= "1000";
                 end if;
             else
-                red <= "0000"; grn <= "0000"; blu <= "0000";
+                red <= "0000"; grn <= "0000"; blu <= "1111";
             end if;
         end if;
     end process;
