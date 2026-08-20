@@ -3,6 +3,11 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity top is
+    generic(
+        cell_size : integer := 16;
+        x_offset  : integer := 48;
+        y_offset  : integer := 33
+    );
     port(
         clk     : in std_logic;
         sw0     : in std_logic; -- simulate / edit
@@ -63,6 +68,7 @@ architecture rtl of top is
     signal red, grn, blu  : std_logic_vector(3 downto 0);
     signal vga_hs_sig, vga_vs_sig : std_logic;
     signal game_grid      : std_logic_vector(1199 downto 0);
+    signal x_pix, y_pix   : integer;
     signal cell_x, cell_y, cell_index : integer;
     signal sw1_meta       : std_logic := '0';
     signal sw1_sync       : std_logic := '0';
@@ -109,29 +115,21 @@ begin
         grid_out    => game_grid
     );
 
+	--concurrent signal assignments
+    x_pix <= to_integer(unsigned(hcount)) - x_offset;
+    y_pix <= to_integer(unsigned(vcount)) - y_offset;
+    cell_x <= x_pix / cell_size when x_pix >= 0 else 0;
+    cell_y <= y_pix / cell_size when y_pix >= 0 else 0;
+    cell_index <= (cell_y * 40) + cell_x;
+
 	--processes
-    draw : process(video_on, hcount, vcount, game_grid)
-        constant cell_size : integer := 16;
-        constant x_offset  : integer := 48;
-        constant y_offset  : integer := 33;
-        variable x_pix     : integer;
-        variable y_pix     : integer;
-        variable x_cell    : integer;
-        variable y_cell    : integer;
-        variable index     : integer;
+    draw : process(video_on, x_pix, y_pix, cell_x, cell_y, cell_index, game_grid)
     begin
         if video_on = '0' then
             red <= "0000"; grn <= "0000"; blu <= "0000";
         else
-            x_pix := to_integer(unsigned(hcount)) - x_offset;
-            y_pix := to_integer(unsigned(vcount)) - y_offset;
-
             if x_pix >= 0 and y_pix >= 0 then
-                x_cell := x_pix / cell_size;
-                y_cell := y_pix / cell_size;
-                index := (y_cell * 40) + x_cell;
-
-                if x_cell < 40 and y_cell < 30 and index >= 0 and index < 1200 and game_grid(index) = '1' then
+                if cell_x < 40 and cell_y < 30 and cell_index >= 0 and cell_index < 1200 and game_grid(cell_index) = '1' then
                     red <= "0000"; grn <= "1111"; blu <= "0000";
                 else
                     red <= "1000"; grn <= "0000"; blu <= "1000";
