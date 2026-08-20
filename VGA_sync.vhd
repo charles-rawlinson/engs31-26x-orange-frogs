@@ -29,6 +29,7 @@ entity vga_sync is
 port	(
 	--INPUT PORTS
 	clk			    : in std_logic; -- from top level
+	p_tick			: in std_logic; -- pixel clock enable pulse
 	reset_db		: in std_logic; -- from debouncer
 	
 	--OUTPUT PORTS
@@ -82,23 +83,25 @@ BEGIN
 Hsync_proc : process(clk)
 begin
 	if rising_edge(clk) then
-        	if h_counter = HSCAN then 
-            		h_counter <= (others => '0'); 
-        	else 
-        		h_counter <= h_counter + 1; 
-        	end if;
-            
-            	if (h_counter >= left_border and h_counter < H_END_DISPLAY) then
-            		H_video_on <= '1';
-           	 else    
-            		H_video_on <= '0';
-          	end if;
-            
-            	if (h_counter >= H_END_DISPLAY and h_counter < H_END_RETRACE) then
-            		h_sync_int <= '0'; 
-            	else 
-            		h_sync_int <= '1';
-            	end if;
+		if p_tick = '1' then
+		        	if h_counter = HSCAN then 
+		            		h_counter <= (others => '0'); 
+		        	else 
+		        		h_counter <= h_counter + 1; 
+		        	end if;
+		            
+		            	if (h_counter >= left_border and h_counter < H_END_DISPLAY) then
+		            		H_video_on <= '1';
+		           	 else    
+		            		H_video_on <= '0';
+		          	end if;
+		            
+		            	if (h_counter >= H_END_DISPLAY and h_counter < H_END_RETRACE) then
+		            		h_sync_int <= '0'; 
+		            	else 
+		            		h_sync_int <= '1';
+		            	end if;
+		end if;
         end if;
 end process Hsync_proc;
 
@@ -106,24 +109,26 @@ end process Hsync_proc;
 Vsync_proc : process(clk)
 begin
 	if rising_edge(clk) then
-    		if h_counter = HSCAN then 
-        		if v_counter = VSCAN then 
-            			v_counter <= (others => '0');
-            		else 
-               			v_counter <= v_counter + 1;
-            		end if;
-                
-            		if (v_counter >= top_border and v_counter < V_END_DISPLAY) then
-               			V_video_on <= '1';
-            		else
-               			V_video_on <= '0';
-            		end if;
-                
-            		if (v_counter >= V_END_DISPLAY and v_counter < V_END_RETRACE) then
-               			v_sync_int <= '0'; 
-           	 	else 
-               			v_sync_int <= '1';
-            		end if; 
+		if p_tick = '1' then
+	    		if h_counter = HSCAN then 
+	        		if v_counter = VSCAN then 
+	            			v_counter <= (others => '0');
+	            		else 
+	               			v_counter <= v_counter + 1;
+	            		end if;
+	                
+	            		if (v_counter >= top_border and v_counter < V_END_DISPLAY) then
+	               			V_video_on <= '1';
+	            		else
+	               			V_video_on <= '0';
+	            		end if;
+	                
+	            		if (v_counter >= V_END_DISPLAY and v_counter < V_END_RETRACE) then
+	               			v_sync_int <= '0'; 
+	           	 	else 
+	               			v_sync_int <= '1';
+	            		end if; 
+			end if;
 		end if;                 
 	end if;
 end process Vsync_proc;

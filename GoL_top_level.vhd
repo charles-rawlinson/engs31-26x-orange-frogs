@@ -20,6 +20,7 @@ architecture arch of top is
 	component vga_sync is
 		port(
 			clk	: in std_logic;
+			p_tick	: in std_logic;
 			reset_db	: in std_logic;
 			hsync_port	: out std_logic;
 			vsync_port	: out std_logic;
@@ -58,7 +59,8 @@ begin
 	--port maps
 	vga : vga_sync
 	port map(
-		clk=>p_tick,
+		clk=>clk,
+		p_tick=>p_tick,
 		reset_db=>reset,
 		hsync_port=>vga_hs_sig,
 		vsync_port=>vga_vs_sig,
