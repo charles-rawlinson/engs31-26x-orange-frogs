@@ -1,7 +1,19 @@
-
 library ieee;
 use ieee.std_logic_1164.all;
  
+--=============================================================
+-- engs 31 final project
+--=============================================================
+-- conway's game of life on vga
+-- timer generation
+-- attempt 1
+-- last edited 8/19/26
+--=============================================================
+
+--=============================================================
+-- library declarations
+--=============================================================
+
 -- produces one clock wide tick every tick_max clocks
 entity gen_timer is
   generic(
@@ -14,6 +26,9 @@ entity gen_timer is
   );
 end entity gen_timer;
  
+--=============================================================
+-- architecture
+--=============================================================
 architecture rtl of gen_timer is
  
   -- free running counter

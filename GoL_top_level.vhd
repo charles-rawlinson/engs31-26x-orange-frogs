@@ -1,3 +1,15 @@
+--=============================================================
+-- engs 31 final project
+--=============================================================
+-- conway's game of life on vga
+-- top level
+-- attempt 1
+-- last edited 8/19/26
+--=============================================================
+
+--=============================================================
+-- library declarations
+--=============================================================
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -20,9 +32,12 @@ entity top is
     );
 end entity top;
 
+--=============================================================
+-- architecture
+--=============================================================
 architecture rtl of top is
 
-	--components
+    -- components
     component vga_sync is
         port(
             clk         : in std_logic;
@@ -60,7 +75,7 @@ architecture rtl of top is
         );
     end component;
 
-	--signals
+	-- signals
     signal hcount, vcount : std_logic_vector(9 downto 0);
     signal video_on       : std_logic;
     signal gen_tick       : std_logic;
@@ -75,6 +90,7 @@ architecture rtl of top is
 
 begin
 
+    -- reset synchronizer
 	reset_sync : process(clk)
 	begin
 		if rising_edge(clk) then
@@ -83,7 +99,7 @@ begin
 		end if;
 	end process reset_sync;
 
-	--port maps
+    -- port maps
     vga : vga_sync
     port map(
         clk        => clk,
@@ -115,14 +131,14 @@ begin
         grid_out    => game_grid
     );
 
-	--concurrent signal assignments
+    -- concurrent signal assignments
     x_pix <= to_integer(unsigned(hcount)) - x_offset;
     y_pix <= to_integer(unsigned(vcount)) - y_offset;
     cell_x <= x_pix / cell_size when x_pix >= 0 else 0;
     cell_y <= y_pix / cell_size when y_pix >= 0 else 0;
     cell_index <= (cell_y * 40) + cell_x;
 
-	--processes
+    -- processes
     draw : process(video_on, x_pix, y_pix, cell_x, cell_y, cell_index, game_grid)
     begin
         if video_on = '0' then
@@ -140,7 +156,7 @@ begin
         end if;
     end process;
 
-	--outputs
+    -- outputs
     vga_r <= red;
     vga_g <= grn;
     vga_b <= blu;

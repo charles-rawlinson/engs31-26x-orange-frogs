@@ -1,20 +1,20 @@
 --=============================================================
--- ENGS 31 FINAL PROJECT 
+-- engs 31 final project
 --=============================================================
--- Conway's Game of Life on VGA
--- VGA SYNC
--- Attempt 1
--- Last Edited 8/19/26
+-- conway's game of life on vga
+-- vga sync
+-- attempt 1
+-- last edited 8/19/26
 --=============================================================
 
 --=============================================================
--- Explanation
+-- explanation
 --=============================================================
 -- controls the syncing functions of the vga
 --=============================================================
 
 --=============================================================
---Library Declarations
+-- library declarations
 --=============================================================
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -23,7 +23,7 @@ use IEEE.NUMERIC_STD.ALL;
 --=============================================================
 
 --=============================================================
---Entity Declarations
+-- entity declarations
 --=============================================================
 entity vga_sync is
 port	(
@@ -43,6 +43,10 @@ end vga_sync;
 
 architecture behavior of vga_sync is
 
+--=============================================================
+-- signals
+--=============================================================
+
 -- signal declaration 
 signal H_video_on 	    : std_logic := '0';
 signal V_video_on 	    : std_logic := '0';
@@ -53,7 +57,7 @@ signal v_counter 	    : unsigned (9 downto 0) := (others => '0');
 signal h_sync_int	    : std_logic := '0';
 signal v_sync_int	    : std_logic := '0';
 
--- VGA 640x480@60 timing constants
+-- vga 640x480@60 timing constants
 
 constant h_back_porch   : integer := 48;
 constant h_display      : integer := 640;
@@ -76,9 +80,9 @@ constant V_END_DISPLAY : integer := v_back_porch + v_display;
 constant V_END_FRONT   : integer := v_back_porch + v_display + v_front_porch;
 constant V_END_RETRACE : integer := v_back_porch + v_display + v_front_porch + v_retrace; 
 
-BEGIN
+begin
 
---H_sync generating process
+-- h sync generating process
 Hsync_proc : process(clk)
 begin
 	if rising_edge(clk) then
@@ -104,7 +108,7 @@ begin
         end if;
 end process Hsync_proc;
 
---V_sync generating process
+-- v sync generating process
 Vsync_proc : process(clk)
 begin
 	if rising_edge(clk) then
@@ -138,6 +142,6 @@ vcount <= std_logic_vector(v_counter);
 Hsync_port <= h_sync_int;
 Vsync_port <= v_sync_int;
 
-video_on <= H_video_on AND V_video_on; --Only enable video out when H_video_out and V_video_out are high. It's important to set the output to zero when you aren't actively displaying video. That's how the monitor determines the black level.
+video_on <= H_video_on AND V_video_on; -- only enable video out when H_video_out and V_video_out are high. it's important to set the output to zero when you aren't actively displaying video. that's how the monitor determines the black level.
 
 end behavior;

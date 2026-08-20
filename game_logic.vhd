@@ -1,7 +1,22 @@
+--=============================================================
+-- engs 31 final project
+--=============================================================
+-- conway's game of life on vga
+-- game logic
+-- attempt 1
+-- last edited 8/19/26
+--=============================================================
+
+--=============================================================
+-- library declarations
+--=============================================================
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+--=============================================================
+-- entity declarations
+--=============================================================
 entity game_logic is
     generic (
         cols : integer := 40;
@@ -16,7 +31,13 @@ entity game_logic is
     );
 end entity game_logic;
 
+--=============================================================
+-- architecture
+--=============================================================
 architecture rtl of game_logic is
+    --=========================================================
+    -- signals
+    --=========================================================
     type grid_t is array (0 to rows - 1, 0 to cols - 1) of std_logic;
 
     signal grid_reg        : grid_t := (others => (others => '0'));
@@ -25,6 +46,7 @@ architecture rtl of game_logic is
     signal count_sig       : integer range 0 to 8 := 0;
     signal n1, n2, n3, n4, n5, n6, n7, n8 : integer range 0 to 1 := 0;
 
+    -- fsm state
     type fsm_state is (HOLD, EVALUATE, COMMIT);
     signal current_state   : fsm_state := HOLD;
     signal next_state      : fsm_state := HOLD;
@@ -35,6 +57,7 @@ architecture rtl of game_logic is
     signal neighbor_count_sig : integer range 0 to 8 := 0;
     signal cell_next_val   : std_logic := '0';
 
+    -- initial pattern
     procedure init_pattern(signal g : out grid_t) is
     begin
         for r in 0 to rows - 1 loop
@@ -55,6 +78,7 @@ architecture rtl of game_logic is
 
 begin
 
+    -- state registers
     state_reg : process(clk)
     begin
         if rising_edge(clk) then
@@ -62,6 +86,7 @@ begin
         end if;
     end process state_reg;
 
+    -- next-state logic
     next_state_logic : process(current_state, row_index, col_index, mode_en, update_tick, reset)
     begin
         next_state <= current_state;
@@ -104,6 +129,7 @@ begin
         end if;
     end process next_state_logic;
 
+    -- output logic
     output_logic : process(current_state, row_index, col_index, grid_reg, neighbor_count_sig, reset)
     begin
         if reset = '1' then
@@ -125,6 +151,7 @@ begin
         end loop;
     end process output_logic;
 
+    -- update registers
     update_reg : process(clk)
     begin
         if rising_edge(clk) then
@@ -146,6 +173,7 @@ begin
         end if;
     end process update_reg;
 
+    -- neighbor counts
     n1 <= 1 when (row_index > 0 and col_index > 0 and grid_reg(row_index - 1, col_index - 1) = '1') else 0;
     n2 <= 1 when (row_index > 0 and grid_reg(row_index - 1, col_index) = '1') else 0;
     n3 <= 1 when (row_index > 0 and col_index < cols - 1 and grid_reg(row_index - 1, col_index + 1) = '1') else 0;

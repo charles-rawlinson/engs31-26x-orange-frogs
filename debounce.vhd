@@ -1,20 +1,20 @@
 --=============================================================
--- ENGS 31 FINAL PROJECT 
+-- engs 31 final project
 --=============================================================
--- Conway's Game of Life on VGA
--- DEBOUNCER
--- Attempt 1
--- Last Edited 8/19/26
+-- conway's game of life on vga
+-- debouncer
+-- attempt 1
+-- last edited 8/19/26
 --=============================================================
 
 --=============================================================
--- Explanation
+-- explanation
 --=============================================================
 -- cleans up a noisy button input and outputs a single clock pulse per press
 --=============================================================
 
 --=============================================================
---Library Declarations
+-- library declarations
 --=============================================================
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -23,14 +23,14 @@ use IEEE.NUMERIC_STD.ALL;
 --=============================================================
 
 --=============================================================
---Entity Declarations
+-- entity declarations
 --=============================================================
 entity debouncer is
 generic(
         STABLE_CYCLES : integer := 250000
     );
 port	(
-	--INPUT PORTS
+    -- input ports
 	clk			        : in std_logic; -- from top level
 	reset_port		    : in std_logic;
 	start_stop_port		: in std_logic;
@@ -41,7 +41,7 @@ port	(
 	btn_down_port		: in std_logic;
 	btn_center_port		: in std_logic;
 
-	--OUTPUT PORTS
+    -- output ports
 	reset_db		    : out std_logic; -- to control, cursor, game logic, grid memory
 	start_stop_db		: out std_logic; -- to control 
 	
@@ -62,13 +62,13 @@ end debouncer;
 
 
 --=============================================================
---Architecture
+-- architecture
 --=============================================================
 architecture Behavioral of debouncer is
     --=========================================================
-    --SIGNALS
+    -- signals
     --==========================================================
-    --synchronizers
+    -- synchronizers
     signal reset_sync_0        : std_logic := '0';
     signal reset_sync_1        : std_logic := '0';
 
@@ -90,7 +90,7 @@ architecture Behavioral of debouncer is
     signal center_sync_0       : std_logic := '0';
     signal center_sync_1       : std_logic := '0';
     
-    --debounced values
+    -- debounced values
     signal reset_stable         : std_logic := '0';
     signal start_stop_stable    : std_logic := '0';
     signal left_stable          : std_logic := '0';
@@ -100,7 +100,7 @@ architecture Behavioral of debouncer is
     signal center_stable        : std_logic := '0';
 
     --=========================================================
-    -- Previous debounced values
+    -- previous debounced values
     --=========================================================
     signal left_previous       : std_logic := '0';
     signal right_previous      : std_logic := '0';
@@ -110,7 +110,7 @@ architecture Behavioral of debouncer is
 
 
     --=========================================================
-    -- Debounce counters
+    -- debounce counters
     --=========================================================
     signal reset_count         : integer range 0 to STABLE_CYCLES := 0;
     signal start_stop_count    : integer range 0 to STABLE_CYCLES := 0;
@@ -123,7 +123,7 @@ architecture Behavioral of debouncer is
 
 begin
 --============================================================
---Synchronizer
+-- synchronizer
 --============================================================
 sychronize : process(clk)
 begin 
@@ -153,7 +153,7 @@ if rising_edge(clk) then
 end if;
 end process synchronize;
 --===========================================================
---Button Debounce and Monopulse
+-- button debounce and monopulse
 --===========================================================
 start_stop_proc: process(clk)
 begin 
