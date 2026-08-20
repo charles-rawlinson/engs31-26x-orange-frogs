@@ -1,6 +1,3 @@
-library ieee;
-use ieee.std_logic_1164.all;
- 
 --=============================================================
 -- engs 31 final project
 --=============================================================
@@ -13,6 +10,8 @@ use ieee.std_logic_1164.all;
 --=============================================================
 -- library declarations
 --=============================================================
+library ieee;
+use ieee.std_logic_1164.all;
 
 -- produces one clock wide tick every tick_max clocks
 entity gen_timer is
