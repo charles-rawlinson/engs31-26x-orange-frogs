@@ -36,8 +36,8 @@ port	(
 	vsync_port		: out std_logic;
 	video_on		: out std_logic;
 	hcount			: out std_logic_vector(9 downto 0);
-	vcount			: out std_logic_vector(9 downto 0)
-	video_on		: out std_logic
+	vcount			: out std_logic_vector(9 downto 0);
+	video_on		: out std_logic;
 	hcount			: out std_logic_vector(9 downto 0);
 	vcount			: out std_logic_vector(9 downto 0)
 	);

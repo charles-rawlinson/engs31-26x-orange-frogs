@@ -52,6 +52,9 @@ architecture arch of top is
 	signal red, grn, blu	: std_logic_vector(3 downto 0);
 	signal vga_hs_sig, vga_vs_sig : std_logic;
 
+
+begin
+	
 	--port maps
 	vga : vga_sync
 	port map(
