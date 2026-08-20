@@ -59,6 +59,7 @@ architecture rtl of vga_graphics is
     signal video_on_d : std_logic := '0';
     signal frame_tick : std_logic := '0';
     signal diag_pos : integer;
+    signal frame_div : integer range 0 to 3 := 0;
     signal gradient_phase : integer range 0 to 95;
     signal r_smooth, g_smooth, b_smooth : std_logic_vector(3 downto 0);
 
@@ -75,15 +76,20 @@ begin
         end if;
     end process frame_detect;
 
-    -- advances one step per frame
+    -- advances one step per 4 frames
     scroll_anim : process (clk)
     begin
         if rising_edge(clk) then
             if frame_tick = '1' then
-                if scroll_offset < 511 then
-                    scroll_offset <= scroll_offset + 1;
+                if frame_div < 3 then
+                    frame_div <= frame_div + 1;
                 else
-                    scroll_offset <= 0;
+                    frame_div <= 0;
+                    if scroll_offset < 511 then
+                        scroll_offset <= scroll_offset + 1;
+                    else
+                        scroll_offset <= 0;
+                    end if;
                 end if;
             end if;
         end if;
