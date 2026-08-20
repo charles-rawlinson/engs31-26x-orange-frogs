@@ -28,9 +28,9 @@ architecture arch of top is
 	--port maps
 	vga : vga_sync port map(
 		clk=>clk,
-		reset=>reset,
-		hsync=>vga_hs,
-		vsync=>vga_vs
+		reset_db=>reset,
+		hsync_port=>vga_hs,
+		vsync_port=>vga_vs
 	);
 
 	--processes
