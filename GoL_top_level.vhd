@@ -36,7 +36,6 @@ architecture rtl of top is
         );
         port(
             clk   : in  std_logic;
-            reset : in  std_logic;
             tick  : out std_logic;
             p_tick : out std_logic
         );
@@ -93,7 +92,6 @@ begin
     gen: gen_timer
     port map(
         clk   => clk,
-        reset => sw1_sync,
         tick  => gen_tick,
         p_tick => p_tick
     );
