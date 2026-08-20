@@ -128,7 +128,6 @@ architecture rtl of top is
         );
         port (
             clk : in std_logic;
-            reset : in std_logic;
             sw0 : in std_logic;
             left_mp : in std_logic;
             right_mp : in std_logic;
@@ -265,7 +264,6 @@ begin
     )
     port map(
         clk => clk,
-        reset => sw1_sync,
         sw0 => sw0_sync,
         left_mp => left_mp,
         right_mp => right_mp,

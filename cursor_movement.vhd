@@ -32,7 +32,6 @@ entity cursor_movement is
     );
     port (
         clk : in std_logic;
-        reset : in std_logic;
         sw0 : in std_logic; -- edit mode enable
         left_mp : in std_logic;
         right_mp : in std_logic;
@@ -63,13 +62,8 @@ begin
     cursor_reg : process (clk)
     begin
         if rising_edge(clk) then
-            if reset = '1' then
-                cursor_x_reg <= 0;
-                cursor_y_reg <= 0;
-            else
-                cursor_x_reg <= cursor_x_next;
-                cursor_y_reg <= cursor_y_next;
-            end if;
+            cursor_x_reg <= cursor_x_next;
+            cursor_y_reg <= cursor_y_next;
         end if;
     end process cursor_reg;
 
@@ -82,7 +76,7 @@ begin
         cell_toggle_next <= '0';
 
         -- only move cursor and allow toggle when in edit mode
-        if sw0 = '1' then
+        if sw0 = '0' then
             -- horizontal movement
             if left_mp = '1' then
                 if cursor_x_reg > 0 then

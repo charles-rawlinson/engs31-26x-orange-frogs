@@ -50,9 +50,7 @@ end entity vga_graphics;
 -- architecture
 --=============================================================
 architecture rtl of vga_graphics is
-    --=========================================================
     -- signals
-    --=========================================================
     signal x_within_cell : integer;
     signal y_within_cell : integer;
     signal on_border : std_logic;
@@ -71,7 +69,11 @@ begin
     begin
         if rising_edge(clk) then
             if p_tick = '1' then
-                scroll_offset <= (scroll_offset + 1) mod 512;
+                if scroll_offset < 7 then
+                    scroll_offset <= scroll_offset + 1;
+                else
+                    scroll_offset <= 0;
+                end if;
             end if;
         end if;
     end process scroll_anim;
@@ -86,8 +88,8 @@ begin
                  '0';
 
     -- diagonal rainbow position
-    diag_pos <= x_pix + y_pix + scroll_offset;
-    gradient_phase <= (diag_pos / 2) mod 96;
+    diag_pos <= 2*x_pix + y_pix + scroll_offset;
+    gradient_phase <= (diag_pos / 6) mod 96;
 
     -- smooth rainbow gradient (0-31: R->Y->G, 32-63: G->C->B, 64-95: B->M->R)
     r_smooth <= "1111" when gradient_phase < 32 else
