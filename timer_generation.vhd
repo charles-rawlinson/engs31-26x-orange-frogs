@@ -29,7 +29,6 @@ begin
     if rising_edge(clk) then
       if reset='1' then
         cnt <= 0;
-        pix_cnt <= 0;
       elsif cnt = tick_max then
         cnt <= 0;
       else
@@ -37,9 +36,7 @@ begin
       end if;
 
       -- pixel tick divider: one-cycle pulse every 4 clk
-      if reset='1' then
-        pix_cnt <= 0;
-      elsif pix_cnt = 3 then
+      if pix_cnt = 3 then
         pix_cnt <= 0;
       else
         pix_cnt <= pix_cnt + 1;

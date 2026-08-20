@@ -4,8 +4,8 @@ use ieee.numeric_std.all;
 
 entity game_logic is
     generic (
-        cols : integer := 30;
-        rows : integer := 40
+        cols : integer := 40;
+        rows : integer := 30
     );
     port (
         clk         : in  std_logic;
@@ -21,6 +21,7 @@ architecture rtl of game_logic is
 
     signal grid_reg        : grid_t := (others => (others => '0'));
     signal next_grid_sig   : grid_t := (others => (others => '0'));
+    signal neighbor_count_next : integer range 0 to 8 := 0;
 
     type fsm_state is (HOLD, EVALUATE, COMMIT);
     signal current_state   : fsm_state := HOLD;
@@ -91,6 +92,8 @@ begin
                     end if;
 
                 when COMMIT =>
+                    next_row_index <= 0;
+                    next_col_index <= 0;
                     next_state <= HOLD;
 
                 when others =>
@@ -102,7 +105,6 @@ begin
     output_logic : process(current_state, row_index, col_index, grid_reg, neighbor_count_sig, reset)
     begin
         if reset = '1' then
-            init_pattern(grid_reg);
             cell_next_val <= '0';
         elsif current_state = EVALUATE then
             if (grid_reg(row_index, col_index) = '1' and neighbor_count_sig = 2) or (neighbor_count_sig = 3) then
@@ -121,14 +123,68 @@ begin
         end loop;
     end process output_logic;
 
-    neighbor_count_sig <=
-        (1 when (row_index > 0 and col_index > 0 and grid_reg(row_index - 1, col_index - 1) = '1') else 0) +
-        (1 when (row_index > 0 and grid_reg(row_index - 1, col_index) = '1') else 0) +
-        (1 when (row_index > 0 and col_index < cols - 1 and grid_reg(row_index - 1, col_index + 1) = '1') else 0) +
-        (1 when (col_index > 0 and grid_reg(row_index, col_index - 1) = '1') else 0) +
-        (1 when (col_index < cols - 1 and grid_reg(row_index, col_index + 1) = '1') else 0) +
-        (1 when (row_index < rows - 1 and col_index > 0 and grid_reg(row_index + 1, col_index - 1) = '1') else 0) +
-        (1 when (row_index < rows - 1 and grid_reg(row_index + 1, col_index) = '1') else 0) +
-        (1 when (row_index < rows - 1 and col_index < cols - 1 and grid_reg(row_index + 1, col_index + 1) = '1') else 0);
+    update_reg : process(clk)
+    begin
+        if rising_edge(clk) then
+            if reset = '1' then
+                init_pattern(grid_reg);
+                next_grid_sig <= (others => (others => '0'));
+                row_index <= 0;
+                col_index <= 0;
+            else
+                row_index <= next_row_index;
+                col_index <= next_col_index;
+
+                if current_state = EVALUATE then
+                    next_grid_sig(row_index, col_index) <= cell_next_val;
+                elsif current_state = COMMIT then
+                    grid_reg <= next_grid_sig;
+                end if;
+            end if;
+        end if;
+    end process update_reg;
+
+    neighbor_count_process : process(grid_reg, row_index, col_index)
+        variable count : integer range 0 to 8;
+    begin
+        count := 0;
+
+        -- Top-left
+        if row_index > 0 and col_index > 0 and grid_reg(row_index - 1, col_index - 1) = '1' then
+            count := count + 1;
+        end if;
+        -- Top
+        if row_index > 0 and grid_reg(row_index - 1, col_index) = '1' then
+            count := count + 1;
+        end if;
+        -- Top-right
+        if row_index > 0 and col_index < cols - 1 and grid_reg(row_index - 1, col_index + 1) = '1' then
+            count := count + 1;
+        end if;
+        -- Left
+        if col_index > 0 and grid_reg(row_index, col_index - 1) = '1' then
+            count := count + 1;
+        end if;
+        -- Right
+        if col_index < cols - 1 and grid_reg(row_index, col_index + 1) = '1' then
+            count := count + 1;
+        end if;
+        -- Bottom-left
+        if row_index < rows - 1 and col_index > 0 and grid_reg(row_index + 1, col_index - 1) = '1' then
+            count := count + 1;
+        end if;
+        -- Bottom
+        if row_index < rows - 1 and grid_reg(row_index + 1, col_index) = '1' then
+            count := count + 1;
+        end if;
+        -- Bottom-right
+        if row_index < rows - 1 and col_index < cols - 1 and grid_reg(row_index + 1, col_index + 1) = '1' then
+            count := count + 1;
+        end if;
+
+        neighbor_count_next <= count;
+    end process neighbor_count_process;
+
+    neighbor_count_sig <= neighbor_count_next;
 
 end architecture rtl;
