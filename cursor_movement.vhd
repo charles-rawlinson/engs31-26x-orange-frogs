@@ -31,19 +31,14 @@ entity cursor_movement is
         rows : integer := 30
     );
     port (
-        -- input ports
         clk : in std_logic;
         reset : in std_logic;
         sw0 : in std_logic; -- edit mode enable
-
-        -- debounced monopulse inputs from debouncer
         left_mp : in std_logic;
         right_mp : in std_logic;
         up_mp : in std_logic;
         down_mp : in std_logic;
         center_mp : in std_logic;
-
-        -- output ports
         cursor_x : out integer range 0 to cols - 1;
         cursor_y : out integer range 0 to rows - 1;
         cell_toggle : out std_logic -- pulse to toggle selected cell
@@ -54,9 +49,7 @@ end entity cursor_movement;
 -- architecture
 --=============================================================
 architecture rtl of cursor_movement is
-    --=========================================================
     -- signals
-    --=========================================================
     signal cursor_x_reg : integer range 0 to cols - 1 := 0;
     signal cursor_y_reg : integer range 0 to rows - 1 := 0;
     signal cursor_x_next : integer range 0 to cols - 1 := 0;
@@ -66,7 +59,7 @@ architecture rtl of cursor_movement is
 
 begin
 
-    -- cursor movement state register
+    -- cursor state register
     cursor_reg : process (clk)
     begin
         if rising_edge(clk) then
@@ -80,7 +73,7 @@ begin
         end if;
     end process cursor_reg;
 
-    -- cursor movement and cell toggle logic
+    -- cursor movement and toggle logic
     cursor_logic : process (cursor_x_reg, cursor_y_reg, left_mp, right_mp, up_mp, down_mp, center_mp, sw0)
     begin
         -- default: hold current position
@@ -123,12 +116,12 @@ begin
     cursor_x <= cursor_x_reg;
     cursor_y <= cursor_y_reg;
 
-    -- cell toggle output (combinatorial from monopulse)
-    cell_toggle_process : process (clk)
+    -- toggle output register
+    toggle_reg : process (clk)
     begin
         if rising_edge(clk) then
             cell_toggle <= cell_toggle_next;
         end if;
-    end process cell_toggle_process;
+    end process toggle_reg;
 
 end architecture rtl;

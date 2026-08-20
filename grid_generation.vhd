@@ -35,9 +35,7 @@ end entity grid_generation;
 -- architecture
 --=============================================================
 architecture rtl of grid_generation is
-    --=========================================================
     -- signals
-    --=========================================================
     type grid_t is array (0 to rows - 1, 0 to cols - 1) of std_logic;
     signal grid_mem : grid_t := (others => (others => '0'));
 begin

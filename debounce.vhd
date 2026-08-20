@@ -4,7 +4,7 @@
 -- conway's game of life on vga
 -- debouncer
 -- attempt 1
--- last edited 8/19/26
+-- last edited 8/20/26
 --=============================================================
 
 --=============================================================
@@ -16,11 +16,9 @@
 --=============================================================
 -- library declarations
 --=============================================================
-library IEEE;
-use IEEE.STD_LOGIC_1164.all;
-use IEEE.NUMERIC_STD.all;
-
---=============================================================
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 --=============================================================
 -- entity declarations
@@ -30,44 +28,34 @@ entity debouncer is
         STABLE_CYCLES : integer := 250000
     );
     port (
-        -- input ports
         clk : in std_logic; -- from top level
         reset_port : in std_logic;
         start_stop_port : in std_logic;
-
         btn_left_port : in std_logic;
         btn_right_port : in std_logic;
         btn_up_port : in std_logic;
         btn_down_port : in std_logic;
         btn_center_port : in std_logic;
-
-        -- output ports
-        reset_db : out std_logic; -- to control, cursor, game logic, grid memory
-        start_stop_db : out std_logic; -- to control 
-
-        left_db : out std_logic; -- to cursor logic
-        right_db : out std_logic; -- to cursor logic
-        up_db : out std_logic; -- to cursor logic
-        down_db : out std_logic; -- to cursor logic
-        center_db : out std_logic; -- to cursor logic
-
-        left_mp : out std_logic; -- to cursor logic
-        right_mp : out std_logic; -- to cursor logic
-        up_mp : out std_logic; -- to cursor logic
-        down_mp : out std_logic; -- to cursor logic
-        center_mp : out std_logic; -- to cursor logic
+        reset_db : out std_logic; -- debounced reset
+        start_stop_db : out std_logic; -- debounced start/stop
+        left_db : out std_logic; -- debounced left
+        right_db : out std_logic; -- debounced right
+        up_db : out std_logic; -- debounced up
+        down_db : out std_logic; -- debounced down
+        center_db : out std_logic; -- debounced center
+        left_mp : out std_logic; -- left monopulse
+        right_mp : out std_logic; -- right monopulse
+        up_mp : out std_logic; -- up monopulse
+        down_mp : out std_logic; -- down monopulse
+        center_mp : out std_logic -- center monopulse
     );
-end debouncer;
---=============================================================
+end entity debouncer;
 
 --=============================================================
 -- architecture
 --=============================================================
-architecture Behavioral of debouncer is
-    --=========================================================
+architecture rtl of debouncer is
     -- signals
-    --==========================================================
-    -- synchronizers
     signal reset_sync_0 : std_logic := '0';
     signal reset_sync_1 : std_logic := '0';
 
@@ -98,18 +86,14 @@ architecture Behavioral of debouncer is
     signal down_stable : std_logic := '0';
     signal center_stable : std_logic := '0';
 
-    --=========================================================
     -- previous debounced values
-    --=========================================================
     signal left_previous : std_logic := '0';
     signal right_previous : std_logic := '0';
     signal up_previous : std_logic := '0';
     signal down_previous : std_logic := '0';
     signal center_previous : std_logic := '0';
 
-    --=========================================================
     -- debounce counters
-    --=========================================================
     signal reset_count : integer range 0 to STABLE_CYCLES := 0;
     signal start_stop_count : integer range 0 to STABLE_CYCLES := 0;
 
@@ -120,10 +104,8 @@ architecture Behavioral of debouncer is
     signal center_count : integer range 0 to STABLE_CYCLES := 0;
 
 begin
-    --============================================================
     -- synchronizer
-    --============================================================
-    sychronize : process (clk)
+    synchronize : process (clk)
     begin
         if rising_edge(clk) then
 
@@ -150,9 +132,8 @@ begin
 
         end if;
     end process synchronize;
-    --===========================================================
+
     -- button debounce and monopulse
-    --===========================================================
     start_stop_proc : process (clk)
     begin
         if rising_edge(clk) then
@@ -282,7 +263,6 @@ begin
     center_mp <= center_stable and not center_previous;
 
     reset_db <= reset_stable;
-
     start_stop_db <= start_stop_stable;
 
-end Behavioral;
+end architecture rtl;

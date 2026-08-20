@@ -27,11 +27,11 @@ use IEEE.NUMERIC_STD.all;
 --=============================================================
 entity vga_sync is
 	port (
-		--INPUT PORTS
+		-- input ports
 		clk : in std_logic; -- from top level
 		p_tick : in std_logic; -- pixel clock enable pulse
 
-		--OUTPUT PORTS
+		--output ports
 		hsync_port : out std_logic;
 		vsync_port : out std_logic;
 		video_on : out std_logic;
@@ -42,10 +42,6 @@ end vga_sync;
 --=============================================================
 
 architecture behavior of vga_sync is
-
-	--=============================================================
-	-- signals
-	--=============================================================
 
 	-- signal declaration 
 	signal H_video_on : std_logic := '0';
