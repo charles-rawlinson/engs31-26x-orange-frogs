@@ -23,14 +23,14 @@ entity game_logic is
         rows : integer := 30
     );
     port (
-        clk         : in  std_logic;
-        reset       : in  std_logic;
-        mode_en     : in  std_logic;
-        update_tick : in  std_logic;
-        cell_toggle : in  std_logic;
-        cursor_x    : in  integer range 0 to cols - 1;
-        cursor_y    : in  integer range 0 to rows - 1;
-        grid_out    : out std_logic_vector((rows * cols) - 1 downto 0)
+        clk : in std_logic;
+        reset : in std_logic;
+        mode_en : in std_logic;
+        update_tick : in std_logic;
+        cell_toggle : in std_logic;
+        cursor_x : in integer range 0 to cols - 1;
+        cursor_y : in integer range 0 to rows - 1;
+        grid_out : out std_logic_vector((rows * cols) - 1 downto 0)
     );
 end entity game_logic;
 
@@ -60,27 +60,27 @@ architecture rtl of game_logic is
         others => (others => '0')
     );
 
-    signal grid_reg        : grid_t := init_pattern;
-    signal next_grid_sig   : grid_t := (others => (others => '0'));
+    signal grid_reg : grid_t := init_pattern;
+    signal next_grid_sig : grid_t := (others => (others => '0'));
     signal neighbor_count_next : integer range 0 to 8 := 0;
-    signal count_sig       : integer range 0 to 8 := 0;
+    signal count_sig : integer range 0 to 8 := 0;
     signal n1, n2, n3, n4, n5, n6, n7, n8 : integer range 0 to 1 := 0;
 
     -- fsm state
     type fsm_state is (HOLD, EVALUATE, COMMIT);
-    signal current_state   : fsm_state := HOLD;
-    signal next_state      : fsm_state := HOLD;
-    signal row_index       : integer range 0 to rows - 1 := 0;
-    signal next_row_index  : integer range 0 to rows - 1 := 0;
-    signal col_index       : integer range 0 to cols - 1 := 0;
-    signal next_col_index  : integer range 0 to cols - 1 := 0;
+    signal current_state : fsm_state := HOLD;
+    signal next_state : fsm_state := HOLD;
+    signal row_index : integer range 0 to rows - 1 := 0;
+    signal next_row_index : integer range 0 to rows - 1 := 0;
+    signal col_index : integer range 0 to cols - 1 := 0;
+    signal next_col_index : integer range 0 to cols - 1 := 0;
     signal neighbor_count_sig : integer range 0 to 8 := 0;
-    signal cell_next_val   : std_logic := '0';
+    signal cell_next_val : std_logic := '0';
 
 begin
 
     -- state registers
-    state_reg : process(clk)
+    state_reg : process (clk)
     begin
         if rising_edge(clk) then
             current_state <= next_state;
@@ -88,7 +88,7 @@ begin
     end process state_reg;
 
     -- next-state logic
-    next_state_logic : process(current_state, row_index, col_index, mode_en, update_tick, reset, cell_toggle, cursor_x, cursor_y)
+    next_state_logic : process (current_state, row_index, col_index, mode_en, update_tick, reset, cell_toggle, cursor_x, cursor_y)
     begin
         next_state <= current_state;
         next_row_index <= row_index;
@@ -131,7 +131,7 @@ begin
     end process next_state_logic;
 
     -- output logic
-    output_logic : process(current_state, row_index, col_index, grid_reg, neighbor_count_sig, reset)
+    output_logic : process (current_state, row_index, col_index, grid_reg, neighbor_count_sig, reset)
     begin
         if reset = '1' then
             cell_next_val <= '0';
@@ -153,7 +153,7 @@ begin
     end process output_logic;
 
     -- update registers
-    update_reg : process(clk)
+    update_reg : process (clk)
     begin
         if rising_edge(clk) then
             if reset = '1' then
@@ -180,14 +180,22 @@ begin
     end process update_reg;
 
     -- neighbor counts
-    n1 <= 1 when (row_index > 0 and col_index > 0 and grid_reg(row_index - 1, col_index - 1) = '1') else 0;
-    n2 <= 1 when (row_index > 0 and grid_reg(row_index - 1, col_index) = '1') else 0;
-    n3 <= 1 when (row_index > 0 and col_index < cols - 1 and grid_reg(row_index - 1, col_index + 1) = '1') else 0;
-    n4 <= 1 when (col_index > 0 and grid_reg(row_index, col_index - 1) = '1') else 0;
-    n5 <= 1 when (col_index < cols - 1 and grid_reg(row_index, col_index + 1) = '1') else 0;
-    n6 <= 1 when (row_index < rows - 1 and col_index > 0 and grid_reg(row_index + 1, col_index - 1) = '1') else 0;
-    n7 <= 1 when (row_index < rows - 1 and grid_reg(row_index + 1, col_index) = '1') else 0;
-    n8 <= 1 when (row_index < rows - 1 and col_index < cols - 1 and grid_reg(row_index + 1, col_index + 1) = '1') else 0;
+    n1 <= 1 when (row_index > 0 and col_index > 0 and grid_reg(row_index - 1, col_index - 1) = '1') else
+          0;
+    n2 <= 1 when (row_index > 0 and grid_reg(row_index - 1, col_index) = '1') else
+          0;
+    n3 <= 1 when (row_index > 0 and col_index < cols - 1 and grid_reg(row_index - 1, col_index + 1) = '1') else
+          0;
+    n4 <= 1 when (col_index > 0 and grid_reg(row_index, col_index - 1) = '1') else
+          0;
+    n5 <= 1 when (col_index < cols - 1 and grid_reg(row_index, col_index + 1) = '1') else
+          0;
+    n6 <= 1 when (row_index < rows - 1 and col_index > 0 and grid_reg(row_index + 1, col_index - 1) = '1') else
+          0;
+    n7 <= 1 when (row_index < rows - 1 and grid_reg(row_index + 1, col_index) = '1') else
+          0;
+    n8 <= 1 when (row_index < rows - 1 and col_index < cols - 1 and grid_reg(row_index + 1, col_index + 1) = '1') else
+          0;
 
     count_sig <= n1 + n2 + n3 + n4 + n5 + n6 + n7 + n8;
     neighbor_count_sig <= count_sig;
