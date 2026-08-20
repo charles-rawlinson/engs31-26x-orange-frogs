@@ -116,6 +116,8 @@ begin
 	--processes
     draw : process(video_on, hcount, vcount, game_grid)
         constant cell_size : integer := 16;
+        constant x_offset  : integer := 48;
+        constant y_offset  : integer := 29;
         variable x_pix     : integer;
         variable y_pix     : integer;
         variable x_cell    : integer;
@@ -125,14 +127,19 @@ begin
         if video_on = '0' then
             red <= "0000"; grn <= "0000"; blu <= "0000";
         else
-            x_pix := to_integer(unsigned(hcount));
-            y_pix := to_integer(unsigned(vcount));
-            x_cell := x_pix / cell_size;
-            y_cell := y_pix / cell_size;
-            index := (y_cell * 40) + x_cell;
+            x_pix := to_integer(unsigned(hcount)) - x_offset;
+            y_pix := to_integer(unsigned(vcount)) - y_offset;
 
-            if x_cell < 40 and y_cell < 30 and index >= 0 and index < 1200 and game_grid(index) = '1' then
-                red <= "0000"; grn <= "1111"; blu <= "0000";
+            if x_pix >= 0 and y_pix >= 0 then
+                x_cell := x_pix / cell_size;
+                y_cell := y_pix / cell_size;
+                index := (y_cell * 40) + x_cell;
+
+                if x_cell < 40 and y_cell < 30 and index >= 0 and index < 1200 and game_grid(index) = '1' then
+                    red <= "0000"; grn <= "1111"; blu <= "0000";
+                else
+                    red <= "0000"; grn <= "0000"; blu <= "0000";
+                end if;
             else
                 red <= "0000"; grn <= "0000"; blu <= "0000";
             end if;
