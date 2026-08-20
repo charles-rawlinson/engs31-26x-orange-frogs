@@ -25,7 +25,7 @@ use IEEE.NUMERIC_STD.ALL;
 --=============================================================
 --Entity Declarations
 --=============================================================
-entity vga_logic is
+entity vga_sync is
 port	(
 	--INPUT PORTS
 	clk			    : in std_logic; -- from top level
@@ -35,29 +35,20 @@ port	(
 	hsync_port		: out std_logic;			-- to display
 	vsync_port		: out std_logic;			-- to display
 	);
-end vga_logic;
+end vga_sync;
 --=============================================================
 
-architecture behavior of VGA is
+architecture behavior of vga_sync is
 
 -- signal declaration 
 signal H_video_on 	    : std_logic := '0';
 signal V_video_on 	    : std_logic := '0';
-
-signal h_sync_delayed	: std_logic := '0';
-signal h_sync_rose	    : std_logic := '0';
 
 signal h_counter 	    : unsigned (9 downto 0) := (others => '0');
 signal v_counter 	    : unsigned (9 downto 0) := (others => '0');
 
 signal h_sync_int	    : std_logic := '0';
 signal v_sync_int	    : std_logic := '0';
-
-signal pixel_x		    : std_logic_vector (9 downto 0) := (others => '0');
-signal pixel_y		    : std_logic_vector (8 downto 0) := (others => '0');
-
-
-
 
 --VGA Constants (taken directly from VGA Class Notes)
 
@@ -94,7 +85,7 @@ begin
         		h_counter <= h_counter + 1; 
         	end if;
             
-            	if h_counter < H_END_DISPLAY then
+            	if (h_counter >= left_border and h_counter < H_END_DISPLAY) then
             		H_video_on <= '1';
            	 else    
             		H_video_on <= '0';
@@ -119,7 +110,7 @@ begin
                			v_counter <= v_counter + 1;
             		end if;
                 
-            		if v_counter < V_END_DISPLAY then
+            		if (v_counter >= top_border and v_counter < V_END_DISPLAY) then
                			V_video_on <= '1';
             		else
                			V_video_on <= '0';
@@ -134,8 +125,8 @@ begin
 	end if;
 end process Vsync_proc;
 
-H_sync <= h_sync_int;
-V_sync <= v_sync_int;
+Hsync_port <= h_sync_int;
+Vsync_port <= v_sync_int;
 
 video_on <= H_video_on AND V_video_on; --Only enable video out when H_video_out and V_video_out are high. It's important to set the output to zero when you aren't actively displaying video. That's how the monitor determines the black level.
 
