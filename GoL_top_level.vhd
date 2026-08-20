@@ -5,8 +5,8 @@ use ieee.numeric_std.all;
 entity top is
     port(
         clk     : in std_logic;
-        sw0     : in std_logic;
-        sw1     : in std_logic;
+        sw0     : in std_logic; -- simulate / edit
+        sw1     : in std_logic; -- reset
         vga_hs  : out std_logic;
         vga_vs  : out std_logic;
         vga_r   : out std_logic_vector(3 downto 0);
@@ -110,7 +110,7 @@ begin
             red <= "0000"; grn <= "0000"; blu <= "0000";
         else
             cell_x <= to_integer(unsigned(hcount)) / 16;
-            cell_y <= to_integer(unsigned(vcount)) / 12;
+            cell_y <= to_integer(unsigned(vcount)) / 12; --12?
             cell_index <= (cell_y * 30) + cell_x;
 
             if cell_x < 30 and cell_y < 40 and cell_index >= 0 and cell_index < 1200 and game_grid(cell_index) = '1' then

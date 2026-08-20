@@ -19,9 +19,6 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
-use ieee.math_real.all;
-library UNISIM;
-use UNISIM.VComponents.all;
 
 --=============================================================
 
@@ -29,6 +26,9 @@ use UNISIM.VComponents.all;
 --Entity Declarations
 --=============================================================
 entity debouncer is
+generic(
+        STABLE_CYCLES : integer := 250000
+    );
 port	(
 	--INPUT PORTS
 	clk			        : in std_logic; -- from top level
@@ -50,149 +50,242 @@ port	(
 	up_db			: out std_logic; -- to cursor logic
 	down_db			: out std_logic; -- to cursor logic
 	center_db		: out std_logic; -- to cursor logic
+
+    left_mp         : out std_logic; -- to cursor logic
+    right_mp        : out std_logic; -- to cursor logic
+    up_mp           : out std_logic; -- to cursor logic
+    down_mp         : out std_logic; -- to cursor logic
+    center_mp       : out std_logic; -- to cursor logic
 	);
 end debouncer;
 --=============================================================
 
 
---=============================================================================
+--=============================================================
 --Architecture
---=============================================================================
-architecture Behavioral of button_interface is
-    --=============================================================================
-    --Signal Declarations
-    --=============================================================================
-    --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    --Synchronizer
-    --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    signal synchronizer  : std_logic_vector(1 downto 0) := "00";
-    signal synchronized_button_press  : std_logic := '0';
+--=============================================================
+architecture Behavioral of debouncer is
+    --=========================================================
+    --SIGNALS
+    --==========================================================
+    --synchronizers
+    signal reset_sync_0        : std_logic := '0';
+    signal reset_sync_1        : std_logic := '0';
 
-    --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    --Debouncer
-    --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    type state_type is (LOW, LOW_TO_HIGH, HIGH, HIGH_TO_LOW);
-    signal current_state    : state_type := LOW;
-    signal next_state       : state_type;
-    signal timeout_counter  : unsigned(7 downto 0) := (others => '0');
-    signal reset            : std_logic := '0';
-    signal timeout          : std_logic := '0';
-    constant MAXCOUNT       : integer := STABLE_TIME;
-    signal debounced        : std_logic := '0';
+    signal start_stop_sync_0   : std_logic := '0';
+    signal start_stop_sync_1   : std_logic := '0';
 
-    --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    --Monopulser
-    --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    signal mp_delay_reg	: std_logic := '0';
+    signal left_sync_0         : std_logic := '0';
+    signal left_sync_1         : std_logic := '0';
 
-    --=============================================================================
-    --Processes
-    --=============================================================================
+    signal right_sync_0        : std_logic := '0';
+    signal right_sync_1        : std_logic := '0';
+
+    signal up_sync_0           : std_logic := '0';
+    signal up_sync_1           : std_logic := '0';
+
+    signal down_sync_0         : std_logic := '0';
+    signal down_sync_1         : std_logic := '0';
+
+    signal center_sync_0       : std_logic := '0';
+    signal center_sync_1       : std_logic := '0';
+    
+    --debounced values
+    signal reset_stable         : std_logic := '0';
+    signal start_stop_stable    : std_logic := '0';
+    signal left_stable          : std_logic := '0';
+    signal right_stable         : std_logic := '0';
+    signal up_stable            : std_logic := '0';
+    signal down_stable          : std_logic := '0';
+    signal center_stable        : std_logic := '0';
+
+    --=========================================================
+    -- Previous debounced values
+    --=========================================================
+    signal left_previous       : std_logic := '0';
+    signal right_previous      : std_logic := '0';
+    signal up_previous         : std_logic := '0';
+    signal down_previous       : std_logic := '0';
+    signal center_previous     : std_logic := '0';
+
+
+    --=========================================================
+    -- Debounce counters
+    --=========================================================
+    signal reset_count         : integer range 0 to STABLE_CYCLES := 0;
+    signal start_stop_count    : integer range 0 to STABLE_CYCLES := 0;
+
+    signal left_count          : integer range 0 to STABLE_CYCLES := 0;
+    signal right_count         : integer range 0 to STABLE_CYCLES := 0;
+    signal up_count            : integer range 0 to STABLE_CYCLES := 0;
+    signal down_count          : integer range 0 to STABLE_CYCLES := 0;
+    signal center_count        : integer range 0 to STABLE_CYCLES := 0;
+
 begin
-    --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    --Double-Flop Synchronizer:
-    --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    --Prevents metastability on the input by passing the raw button press through a
-    --double flop synchronizer.
-    synchronize: process(clk_port, synchronizer)
-    begin
-        if rising_edge(clk_port) then
-            synchronizer <= button_port & synchronizer(1);
+--============================================================
+--Synchronizer
+--============================================================
+sychronize : process(clk)
+begin 
+if rising_edge(clk) then
+
+            reset_sync_0      <= reset_port;
+            reset_sync_1      <= reset_sync_0;
+
+            start_stop_sync_0 <= start_stop_port;
+            start_stop_sync_1 <= start_stop_sync_0;
+
+            left_sync_0       <= btn_left_port;
+            left_sync_1       <= left_sync_0;
+
+            right_sync_0      <= btn_right_port;
+            right_sync_1      <= right_sync_0;
+
+            up_sync_0         <= btn_up_port;
+            up_sync_1         <= up_sync_0;
+
+            down_sync_0       <= btn_down_port;
+            down_sync_1       <= down_sync_0;
+
+            center_sync_0     <= btn_center_port;
+            center_sync_1     <= center_sync_0;
+
+end if;
+end process synchronize;
+--===========================================================
+--Button Debounce and Monopulse
+--===========================================================
+start_stop_proc: process(clk)
+begin 
+    if rising_edge(clk) then
+        if start_stop_sync_1 = start_stop_stable then
+            start_stop_count <= 0;
+        elsif start_stop_count = STABLE_CYCLES then
+            start_stop_stable <= start_stop_sync_1;
+            start_stop_count <= 0;
+        else
+            start_stop_count <= start_stop_count + 1;
         end if;
-        synchronized_button_press <= synchronizer(0);
-    end process;
+    end if;
+end process;
 
-    --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    --Debouncer:
-    --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    state_update: process(clk_port)
-    begin
-        if rising_edge(clk_port) then
-            current_state <= next_state;
+reset_proc: process(clk)
+begin
+    if rising_edge(clk) then
+        if reset_sync_1 = reset_stable then
+            reset_count <= 0;
+        elsif reset_count = STABLE_CYCLES then
+            reset_stable <= reset_sync_1;
+            reset_count <= 0;
+        else
+            reset_count <= reset_count + 1;
         end if;
-    end process;
-
-    next_state_logic: process(current_state, synchronized_button_press, timeout)
-    begin
-        next_state <= current_state;
-        case current_state is
-            when LOW =>
-                if synchronized_button_press = '1' then
-                    next_state <= LOW_TO_HIGH;
-                end if;
-
-            when LOW_TO_HIGH =>
-                if synchronized_button_press = '0' then
-                    next_state <= LOW;
-                elsif timeout = '1' then
-                    next_state <= HIGH;
-                end if;
-
-            when HIGH =>
-                if synchronized_button_press = '0' then
-                    next_state <= HIGH_TO_LOW;
-                end if;
-
-            when HIGH_TO_LOW =>
-                if synchronized_button_press = '1' then
-                    next_state <= HIGH;
-                elsif timeout = '1' then
-                    next_state <= LOW;
-                end if;
-        end case;
-    end process;
-
-    output_logic: process(current_state)
-    begin
-        reset <= '0';
-        debounced <= '0';
-
-        case current_state is
-            when LOW =>
-                reset       <= '1';
-
-            when HIGH =>
-                reset       <= '1';
-                debounced   <= '1';
-
-            when HIGH_TO_LOW =>
-                debounced   <= '1';
-
-            when others=> null;
-        end case;
-
-    end process;
-
-    button_db_port <= debounced;
+    end if;
+end process;
 
 
-    timer: process(clk_port, timeout_counter)
-    begin
-        if rising_edge(clk_port) then
-            if reset = '1' then
-                timeout_counter <= (others => '0');
-            else
-                timeout_counter <= timeout_counter + 1;
-            end if;
-        end if;
-    end process timer;
+left_process : process(clk)
+begin  
+    if rising_edge(clk) then
+        --debounce
+        if left_sync_1 = left_stable then
+            left_count <= 0;
+        elsif left_count = STABLE_CYCLES then
+            left_stable <= left_sync_1;
+            left_count <= 0;
+        else
+            left_count <= left_count + 1; 
+        end if; 
+        --monopulse
+        left_previous <= left_stable;
+    end if; 
+end process left_process;
 
-    timout_p : process( timeout_counter ) begin
-        timeout <= '0';
-        if timeout_counter = MAXCOUNT - 1 then
-            timeout <= '1';
-        end if;
-    end process;
+right_process : process(clk)
+begin  
+    if rising_edge(clk) then
+        --debounce
+        if right_sync_1 = right_stable then
+            right_count <= 0;
+        elsif right_count = STABLE_CYCLES then
+            right_stable <= right_sync_1;
+            right_count <= 0;
+        else
+            right_count <= right_count + 1; 
+        end if; 
+        --monopulse
+        right_previous <= right_stable;
+    end if; 
+end process right_process;
 
-    --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    --Monopulser:
-    --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    --A monopulsed output is an output that is high for one clock cycle.
-    monopulser: process(clk_port, debounced, mp_delay_reg)
-    begin
-        if rising_edge(clk_port) then
-            mp_delay_reg <= debounced;
-        end if;
-        button_mp_port <= debounced and not(mp_delay_reg);
-    end process monopulser;
+up_process : process(clk)
+begin  
+    if rising_edge(clk) then
+        --debounce
+        if up_sync_1 = up_stable then
+            up_count <= 0;
+        elsif up_count = STABLE_CYCLES then
+            up_stable <= up_sync_1;
+            up_count <= 0;
+        else
+            up_count <= up_count + 1; 
+        end if; 
+        --monopulse
+        up_previous <= up_stable;
+    end if; 
+end process up_process;
+
+down_process : process(clk)
+begin  
+    if rising_edge(clk) then
+        --debounce
+        if down_sync_1 = down_stable then
+            down_count <= 0;
+        elsif down_count = STABLE_CYCLES then
+            down_stable <= down_sync_1;
+            down_count <= 0;
+        else
+            down_count <= down_count + 1; 
+        end if; 
+        --monopulse
+        down_previous <= down_stable;
+    end if; 
+end process down_process;
+
+center_process : process(clk)
+begin  
+    if rising_edge(clk) then
+        --debounce
+        if center_sync_1 = center_stable then
+            center_count <= 0;
+        elsif center_count = STABLE_CYCLES then
+            center_stable <= center_sync_1;
+            center_count <= 0;
+        else
+            center_count <= center_count + 1; 
+        end if; 
+        --monopulse
+        center_previous <= center_stable;
+    end if; 
+end process center_process;
+
+left_db <= left_stable; 
+left_mp <= left_stable and not left_previous;
+
+right_db <= right_stable; 
+right_mp <= right_stable and not right_previous; 
+
+up_db <= up_stable; 
+up_mp <= up_stable and not up_previous; 
+
+down_db <= down_stable; 
+down_mp <= down_stable and not down_previous; 
+
+center_db <= center_stable; 
+center_mp <= center_stable and not center_previous;
+
+reset_db <= reset_stable;
+
+start_stop_db <= start_stop_stable; 
+
 end Behavioral;
