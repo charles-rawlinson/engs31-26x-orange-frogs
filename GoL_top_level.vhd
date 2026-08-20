@@ -66,15 +66,25 @@ architecture rtl of top is
     signal vga_hs_sig, vga_vs_sig : std_logic;
     signal game_grid      : std_logic_vector(1199 downto 0);
     signal cell_x, cell_y, cell_index : integer;
+    signal sw1_meta       : std_logic := '0';
+    signal sw1_sync       : std_logic := '0';
 
 begin
+
+	reset_sync : process(clk)
+	begin
+		if rising_edge(clk) then
+			sw1_meta <= sw1;
+			sw1_sync <= sw1_meta;
+		end if;
+	end process reset_sync;
 
 	--port maps
     vga : vga_sync
     port map(
         clk        => clk,
         p_tick     => p_tick,
-        reset_db   => sw1,
+        reset_db   => sw1_sync,
         hsync_port => vga_hs_sig,
         vsync_port => vga_vs_sig,
         video_on   => video_on,
@@ -85,7 +95,7 @@ begin
     gen: gen_timer
     port map(
         clk   => clk,
-        reset => sw1,
+        reset => sw1_sync,
         tick  => gen_tick,
         p_tick => p_tick
     );
@@ -97,7 +107,7 @@ begin
     )
     port map (
         clk         => clk,
-        reset       => sw1,
+        reset       => sw1_sync,
         mode_en     => sw0,
         update_tick => gen_tick,
         grid_out    => game_grid
