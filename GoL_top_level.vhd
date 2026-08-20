@@ -4,7 +4,7 @@
 -- conway's game of life on vga
 -- top level
 -- attempt 1
--- last edited 8/19/26
+-- last edited 8/20/26
 --=============================================================
 
 --=============================================================
@@ -24,6 +24,11 @@ entity top is
         clk     : in std_logic;
         sw0     : in std_logic; -- simulate / edit
         sw1     : in std_logic; -- reset
+        btn_left : in std_logic;
+        btn_right : in std_logic;
+        btn_up : in std_logic;
+        btn_down : in std_logic;
+        btn_center : in std_logic;
         vga_hs  : out std_logic;
         vga_vs  : out std_logic;
         vga_r   : out std_logic_vector(3 downto 0);
@@ -75,6 +80,54 @@ architecture rtl of top is
         );
     end component;
 
+    component debouncer is
+        generic(
+            STABLE_CYCLES : integer := 250000
+        );
+        port(
+            clk             : in std_logic;
+            reset_port      : in std_logic;
+            start_stop_port : in std_logic;
+            btn_left_port   : in std_logic;
+            btn_right_port  : in std_logic;
+            btn_up_port     : in std_logic;
+            btn_down_port   : in std_logic;
+            btn_center_port : in std_logic;
+            reset_db        : out std_logic;
+            start_stop_db   : out std_logic;
+            left_db         : out std_logic;
+            right_db        : out std_logic;
+            up_db           : out std_logic;
+            down_db         : out std_logic;
+            center_db       : out std_logic;
+            left_mp         : out std_logic;
+            right_mp        : out std_logic;
+            up_mp           : out std_logic;
+            down_mp         : out std_logic;
+            center_mp       : out std_logic
+        );
+    end component;
+
+    component cursor_movement is
+        generic (
+            cols : integer := 40;
+            rows : integer := 30
+        );
+        port (
+            clk         : in std_logic;
+            reset       : in std_logic;
+            sw0         : in std_logic;
+            left_mp     : in std_logic;
+            right_mp    : in std_logic;
+            up_mp       : in std_logic;
+            down_mp     : in std_logic;
+            center_mp   : in std_logic;
+            cursor_x    : out integer range 0 to cols - 1;
+            cursor_y    : out integer range 0 to rows - 1;
+            cell_toggle : out std_logic
+        );
+    end component;
+
 	-- signals
     signal hcount, vcount : std_logic_vector(9 downto 0);
     signal video_on       : std_logic;
@@ -87,6 +140,15 @@ architecture rtl of top is
     signal cell_x, cell_y, cell_index : integer;
     signal sw1_meta       : std_logic := '0';
     signal sw1_sync       : std_logic := '0';
+    signal sw0_meta       : std_logic := '0';
+    signal sw0_sync       : std_logic := '0';
+    
+    -- debouncer signals
+    signal left_mp, right_mp, up_mp, down_mp, center_mp : std_logic;
+    
+    -- cursor signals
+    signal cursor_x_sig, cursor_y_sig : integer range 0 to 39;
+    signal cell_toggle_sig : std_logic;
 
 begin
 
@@ -96,6 +158,8 @@ begin
 		if rising_edge(clk) then
 			sw1_meta <= sw1;
 			sw1_sync <= sw1_meta;
+			sw0_meta <= sw0;
+			sw0_sync <= sw0_meta;
 		end if;
 	end process reset_sync;
 
@@ -126,9 +190,55 @@ begin
     port map (
         clk         => clk,
         reset       => sw1_sync,
-        mode_en     => sw0,
+        mode_en     => sw0_sync,
         update_tick => gen_tick,
+        cell_toggle => cell_toggle_sig,
+        cursor_x    => cursor_x_sig,
+        cursor_y    => cursor_y_sig,
         grid_out    => game_grid
+    );
+
+    dbnc : debouncer
+    port map (
+        clk             => clk,
+        reset_port      => sw1,
+        start_stop_port => '0',
+        btn_left_port   => btn_left,
+        btn_right_port  => btn_right,
+        btn_up_port     => btn_up,
+        btn_down_port   => btn_down,
+        btn_center_port => btn_center,
+        reset_db        => open,
+        start_stop_db   => open,
+        left_db         => open,
+        right_db        => open,
+        up_db           => open,
+        down_db         => open,
+        center_db       => open,
+        left_mp         => left_mp,
+        right_mp        => right_mp,
+        up_mp           => up_mp,
+        down_mp         => down_mp,
+        center_mp       => center_mp
+    );
+
+    cursor : cursor_movement
+    generic map (
+        cols => 40,
+        rows => 30
+    )
+    port map (
+        clk         => clk,
+        reset       => sw1_sync,
+        sw0         => sw0_sync,
+        left_mp     => left_mp,
+        right_mp    => right_mp,
+        up_mp       => up_mp,
+        down_mp     => down_mp,
+        center_mp   => center_mp,
+        cursor_x    => cursor_x_sig,
+        cursor_y    => cursor_y_sig,
+        cell_toggle => cell_toggle_sig
     );
 
     -- concurrent signal assignments
@@ -139,16 +249,25 @@ begin
     cell_index <= (cell_y * 40) + cell_x;
 
     -- processes
-    draw : process(video_on, x_pix, y_pix, cell_x, cell_y, cell_index, game_grid)
+    draw : process(video_on, x_pix, y_pix, cell_x, cell_y, cell_index, game_grid, cursor_x_sig, cursor_y_sig, sw0_sync)
     begin
         if video_on = '0' then
             red <= "0000"; grn <= "0000"; blu <= "0000";
         else
             if x_pix >= 0 and y_pix >= 0 then
-                if cell_x < 40 and cell_y < 30 and cell_index >= 0 and cell_index < 1200 and game_grid(cell_index) = '1' then
-                    red <= "0000"; grn <= "1111"; blu <= "0000";
+                if cell_x < 40 and cell_y < 30 and cell_index >= 0 and cell_index < 1200 then
+                    -- cursor highlight in edit mode
+                    if sw0_sync = '1' and cell_x = cursor_x_sig and cell_y = cursor_y_sig then
+                        red <= "1111"; grn <= "1111"; blu <= "0000";
+                    -- live cells in green
+                    elsif game_grid(cell_index) = '1' then
+                        red <= "0000"; grn <= "1111"; blu <= "0000";
+                    -- dead cells in purple
+                    else
+                        red <= "1000"; grn <= "0000"; blu <= "1000";
+                    end if;
                 else
-                    red <= "1000"; grn <= "0000"; blu <= "1000";
+                    red <= "0000"; grn <= "0000"; blu <= "1111";
                 end if;
             else
                 red <= "0000"; grn <= "0000"; blu <= "1111";

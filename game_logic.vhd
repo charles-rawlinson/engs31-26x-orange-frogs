@@ -4,7 +4,7 @@
 -- conway's game of life on vga
 -- game logic
 -- attempt 1
--- last edited 8/19/26
+-- last edited 8/20/26
 --=============================================================
 
 --=============================================================
@@ -27,6 +27,9 @@ entity game_logic is
         reset       : in  std_logic;
         mode_en     : in  std_logic;
         update_tick : in  std_logic;
+        cell_toggle : in  std_logic;
+        cursor_x    : in  integer range 0 to cols - 1;
+        cursor_y    : in  integer range 0 to rows - 1;
         grid_out    : out std_logic_vector((rows * cols) - 1 downto 0)
     );
 end entity game_logic;
@@ -85,7 +88,7 @@ begin
     end process state_reg;
 
     -- next-state logic
-    next_state_logic : process(current_state, row_index, col_index, mode_en, update_tick, reset)
+    next_state_logic : process(current_state, row_index, col_index, mode_en, update_tick, reset, cell_toggle, cursor_x, cursor_y)
     begin
         next_state <= current_state;
         next_row_index <= row_index;
@@ -161,6 +164,11 @@ begin
             else
                 row_index <= next_row_index;
                 col_index <= next_col_index;
+
+                -- toggle cell in edit mode
+                if cell_toggle = '1' then
+                    grid_reg(cursor_y, cursor_x) <= not grid_reg(cursor_y, cursor_x);
+                end if;
 
                 if current_state = EVALUATE then
                     next_grid_sig(row_index, col_index) <= cell_next_val;
