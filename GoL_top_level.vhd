@@ -86,6 +86,9 @@ architecture rtl of top is
             reset : in std_logic;
             mode_en : in std_logic;
             update_tick : in std_logic;
+            cell_toggle : in std_logic;
+            cursor_x : in integer range 0 to cols - 1;
+            cursor_y : in integer range 0 to rows - 1;
             grid_out : out std_logic_vector((rows * cols) - 1 downto 0)
         );
     end component;
