@@ -32,9 +32,14 @@ port	(
 	reset_db		: in std_logic; -- from debouncer
 	
 	--OUTPUT PORTS
-	hsync_port		: out std_logic;			-- to display
-	vsync_port		: out std_logic;			-- to display
+	hsync_port		: out std_logic;
+	vsync_port		: out std_logic;
+	video_on		: out std_logic;
+	hcount			: out std_logic_vector(9 downto 0);
+	vcount			: out std_logic_vector(9 downto 0)
 	video_on		: out std_logic
+	hcount			: out std_logic_vector(9 downto 0);
+	vcount			: out std_logic_vector(9 downto 0)
 	);
 end vga_sync;
 --=============================================================
@@ -125,6 +130,9 @@ begin
 		end if;                 
 	end if;
 end process Vsync_proc;
+
+hcount <= std_logic_vector(h_counter);
+vcount <= std_logic_vector(v_counter);
 
 Hsync_port <= h_sync_int;
 Vsync_port <= v_sync_int;
