@@ -45,8 +45,8 @@ architecture rtl of top is
 
     component game_logic is
         generic (
-            cols : integer := 30;
-            rows : integer := 40
+            cols : integer := 40;
+            rows : integer := 30
         );
         port (
             clk         : in  std_logic;
@@ -102,8 +102,8 @@ begin
 
     life : game_logic
     generic map (
-        cols => 30,
-        rows => 40
+        cols => 40,
+        rows => 30
     )
     port map (
         clk         => clk,
@@ -115,15 +115,23 @@ begin
 
 	--processes
     draw : process(video_on, hcount, vcount, game_grid)
+        constant cell_size : integer := 16;
+        variable x_pix     : integer;
+        variable y_pix     : integer;
+        variable x_cell    : integer;
+        variable y_cell    : integer;
+        variable index     : integer;
     begin
         if video_on = '0' then
             red <= "0000"; grn <= "0000"; blu <= "0000";
         else
-            cell_x <= to_integer(unsigned(hcount)) / 16;
-            cell_y <= to_integer(unsigned(vcount)) / 12;
-            cell_index <= (cell_y * 30) + cell_x;
+            x_pix := to_integer(unsigned(hcount));
+            y_pix := to_integer(unsigned(vcount));
+            x_cell := x_pix / cell_size;
+            y_cell := y_pix / cell_size;
+            index := (y_cell * 40) + x_cell;
 
-            if cell_x < 30 and cell_y < 40 and cell_index >= 0 and cell_index < 1200 and game_grid(cell_index) = '1' then
+            if x_cell < 40 and y_cell < 30 and index >= 0 and index < 1200 and game_grid(index) = '1' then
                 red <= "0000"; grn <= "1111"; blu <= "0000";
             else
                 red <= "0000"; grn <= "0000"; blu <= "0000";

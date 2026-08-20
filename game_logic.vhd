@@ -4,8 +4,8 @@ use ieee.numeric_std.all;
 
 entity game_logic is
     generic (
-        cols : integer := 30;
-        rows : integer := 40
+        cols : integer := 40;
+        rows : integer := 30
     );
     port (
         clk         : in  std_logic;

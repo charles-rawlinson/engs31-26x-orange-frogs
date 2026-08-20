@@ -29,7 +29,6 @@ begin
     if rising_edge(clk) then
       if reset='1' then
         cnt <= 0;
-        pix_cnt <= 0;
       elsif cnt = tick_max then
         cnt <= 0;
       else
@@ -37,9 +36,7 @@ begin
       end if;
 
       -- pixel tick divider: one-cycle pulse every 4 clk
-      if reset='1' then
-        pix_cnt <= 0;
-      elsif pix_cnt = 3 then
+      if pix_cnt = 3 then
         pix_cnt <= 0;
       else
         pix_cnt <= pix_cnt + 1;
@@ -48,9 +45,7 @@ begin
   end process;
  
   tick <= '1' when cnt = tick_max else '0';
-  -- Hold the pixel tick low while reset is asserted so VGA timing does not
-  -- collapse to the system clock rate during reset.
-  p_tick <= '0' when reset = '1' else '1' when pix_cnt = 0 else '0';
+  p_tick <= '1' when pix_cnt = 0 else '0';
  
 end architecture rtl;
  
