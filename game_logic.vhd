@@ -19,13 +19,18 @@ end entity game_logic;
 architecture rtl of game_logic is
     type grid_t is array (0 to rows - 1, 0 to cols - 1) of std_logic;
 
-    signal grid_reg  : grid_t := (others => (others => '0'));
-    signal next_grid : grid_t := (others => (others => '0'));
+    signal grid_reg    : grid_t := (others => (others => '0'));
+    signal next_grid_sig: grid_t := (others => (others => '0'));
 
     type fsm_state is (HOLD, EVALUATE, COMMIT);
-    signal current_state : fsm_state := HOLD;
-    signal row_index    : integer range 0 to rows - 1 := 0;
-    signal col_index    : integer range 0 to cols - 1 := 0;
+    signal current_state  : fsm_state := HOLD;
+    signal next_state     : fsm_state := HOLD;
+    signal row_index      : integer range 0 to rows - 1 := 0;
+    signal next_row_index : integer range 0 to rows - 1 := 0;
+    signal col_index      : integer range 0 to cols - 1 := 0;
+    signal next_col_index : integer range 0 to cols - 1 := 0;
+    signal neighbor_count_sig : integer range 0 to 8 := 0;
+    signal cell_next_val : std_logic := '0';
 
     procedure init_pattern(signal g : out grid_t) is
     begin
@@ -57,80 +62,89 @@ begin
         end loop;
     end process flatten_grid;
 
-    state_machine : process(clk)
-        variable neighbor_count : integer range 0 to 8;
+    -- Synchronous state register - updates state every cycle
+    state_reg : process(clk)
     begin
         if rising_edge(clk) then
             if reset = '1' then
                 init_pattern(grid_reg);
-                next_grid <= (others => (others => '0'));
                 current_state <= HOLD;
                 row_index <= 0;
                 col_index <= 0;
             else
-                case current_state is
-                    when HOLD =>
-                        if mode_en = '1' and update_tick = '1' then
-                            next_grid <= grid_reg;
-                            row_index <= 0;
-                            col_index <= 0;
-                            current_state <= EVALUATE;
-                        end if;
+                current_state <= next_state;
+                row_index <= next_row_index;
+                col_index <= next_col_index;
 
-                    when EVALUATE =>
-                        neighbor_count := 0;
+                if current_state = EVALUATE then
+                    next_grid_sig(row_index, col_index) <= cell_next_val;
+                end if;
 
-                        if row_index > 0 and col_index > 0 and grid_reg(row_index - 1, col_index - 1) = '1' then
-                            neighbor_count := neighbor_count + 1;
-                        end if;
-                        if row_index > 0 and grid_reg(row_index - 1, col_index) = '1' then
-                            neighbor_count := neighbor_count + 1;
-                        end if;
-                        if row_index > 0 and col_index < cols - 1 and grid_reg(row_index - 1, col_index + 1) = '1' then
-                            neighbor_count := neighbor_count + 1;
-                        end if;
-                        if col_index > 0 and grid_reg(row_index, col_index - 1) = '1' then
-                            neighbor_count := neighbor_count + 1;
-                        end if;
-                        if col_index < cols - 1 and grid_reg(row_index, col_index + 1) = '1' then
-                            neighbor_count := neighbor_count + 1;
-                        end if;
-                        if row_index < rows - 1 and col_index > 0 and grid_reg(row_index + 1, col_index - 1) = '1' then
-                            neighbor_count := neighbor_count + 1;
-                        end if;
-                        if row_index < rows - 1 and grid_reg(row_index + 1, col_index) = '1' then
-                            neighbor_count := neighbor_count + 1;
-                        end if;
-                        if row_index < rows - 1 and col_index < cols - 1 and grid_reg(row_index + 1, col_index + 1) = '1' then
-                            neighbor_count := neighbor_count + 1;
-                        end if;
-
-                        if (grid_reg(row_index, col_index) = '1' and neighbor_count = 2) or (neighbor_count = 3) then
-                            next_grid(row_index, col_index) <= '1';
-                        else
-                            next_grid(row_index, col_index) <= '0';
-                        end if;
-
-                        if col_index = cols - 1 then
-                            if row_index = rows - 1 then
-                                current_state <= COMMIT;
-                            else
-                                row_index <= row_index + 1;
-                                col_index <= 0;
-                            end if;
-                        else
-                            col_index <= col_index + 1;
-                        end if;
-
-                    when COMMIT =>
-                        grid_reg <= next_grid;
-                        current_state <= HOLD;
-
-                    when others =>
-                        current_state <= HOLD;
-                end case;
+                if current_state = COMMIT then
+                    grid_reg <= next_grid_sig;
+                end if;
             end if;
         end if;
-    end process state_machine;
+    end process state_reg;
+
+    -- Neighbor count calculation - combinational
+    neighbor_count_sig <= 
+        (1 when (row_index > 0 and col_index > 0 and grid_reg(row_index - 1, col_index - 1) = '1') else 0) +
+        (1 when (row_index > 0 and grid_reg(row_index - 1, col_index) = '1') else 0) +
+        (1 when (row_index > 0 and col_index < cols - 1 and grid_reg(row_index - 1, col_index + 1) = '1') else 0) +
+        (1 when (col_index > 0 and grid_reg(row_index, col_index - 1) = '1') else 0) +
+        (1 when (col_index < cols - 1 and grid_reg(row_index, col_index + 1) = '1') else 0) +
+        (1 when (row_index < rows - 1 and col_index > 0 and grid_reg(row_index + 1, col_index - 1) = '1') else 0) +
+        (1 when (row_index < rows - 1 and grid_reg(row_index + 1, col_index) = '1') else 0) +
+        (1 when (row_index < rows - 1 and col_index < cols - 1 and grid_reg(row_index + 1, col_index + 1) = '1') else 0);
+
+    -- Next state logic - determines what the next state should be
+    next_state_logic : process(current_state, row_index, col_index, mode_en, update_tick)
+    begin
+        next_state <= current_state;
+        next_row_index <= row_index;
+        next_col_index <= col_index;
+
+        case current_state is
+            when HOLD =>
+                if mode_en = '1' and update_tick = '1' then
+                    next_row_index <= 0;
+                    next_col_index <= 0;
+                    next_state <= EVALUATE;
+                end if;
+
+            when EVALUATE =>
+                if col_index = cols - 1 then
+                    if row_index = rows - 1 then
+                        next_state <= COMMIT;
+                    else
+                        next_row_index <= row_index + 1;
+                        next_col_index <= 0;
+                    end if;
+                else
+                    next_col_index <= col_index + 1;
+                end if;
+
+            when COMMIT =>
+                next_state <= HOLD;
+
+            when others =>
+                null;
+        end case;
+    end process next_state_logic;
+
+    -- Output logic - determines cell values for current state
+    output_logic : process(current_state, row_index, col_index, grid_reg, neighbor_count_sig)
+    begin
+        if current_state = EVALUATE then
+            if (grid_reg(row_index, col_index) = '1' and neighbor_count_sig = 2) or (neighbor_count_sig = 3) then
+                cell_next_val <= '1';
+            else
+                cell_next_val <= '0';
+            end if;
+        else
+            cell_next_val <= '0';
+        end if;
+    end process output_logic;
 
 end architecture rtl;
