@@ -30,7 +30,6 @@ port	(
 	--INPUT PORTS
 	clk			    : in std_logic; -- from top level
 	p_tick			: in std_logic; -- pixel clock enable pulse
-	reset_db		: in std_logic; -- from debouncer
 	
 	--OUTPUT PORTS
 	hsync_port		: out std_logic;
@@ -54,28 +53,28 @@ signal v_counter 	    : unsigned (9 downto 0) := (others => '0');
 signal h_sync_int	    : std_logic := '0';
 signal v_sync_int	    : std_logic := '0';
 
---VGA Constants (taken directly from VGA Class Notes)
+-- VGA 640x480@60 timing constants
 
-constant left_border    : integer := 48;
+constant h_back_porch   : integer := 48;
 constant h_display      : integer := 640;
-constant right_border   : integer := 16;
+constant h_front_porch  : integer := 16;
 constant h_retrace      : integer := 96;
-constant HSCAN          : integer := left_border + h_display + right_border + h_retrace - 1; --number of PCLKs in an H_sync period
+constant HSCAN          : integer := h_back_porch + h_display + h_front_porch + h_retrace - 1; -- number of PCLKs in an H sync period
 
 
-constant top_border     : integer := 29;
+constant v_back_porch   : integer := 33;
 constant v_display      : integer := 480;
-constant bottom_border  : integer := 10;
+constant v_front_porch  : integer := 10;
 constant v_retrace      : integer := 2;
-constant VSCAN          : integer := top_border + v_display + bottom_border + v_retrace - 1; --number of H_syncs in an V_sync period
+constant VSCAN          : integer := v_back_porch + v_display + v_front_porch + v_retrace - 1; -- number of H syncs in a V sync period
 
-constant H_END_DISPLAY : integer := left_border + h_display;
-constant H_END_RIGHT   : integer := left_border + h_display + right_border;
-constant H_END_RETRACE : integer := left_border + h_display + right_border + h_retrace; 
+constant H_END_DISPLAY : integer := h_back_porch + h_display;
+constant H_END_FRONT   : integer := h_back_porch + h_display + h_front_porch;
+constant H_END_RETRACE : integer := h_back_porch + h_display + h_front_porch + h_retrace; 
 
-constant V_END_DISPLAY : integer := top_border + v_display;
-constant V_END_BOTTOM  : integer := top_border + v_display + bottom_border;
-constant V_END_RETRACE : integer := top_border + v_display + bottom_border + v_retrace; 
+constant V_END_DISPLAY : integer := v_back_porch + v_display;
+constant V_END_FRONT   : integer := v_back_porch + v_display + v_front_porch;
+constant V_END_RETRACE : integer := v_back_porch + v_display + v_front_porch + v_retrace; 
 
 BEGIN
 
@@ -90,13 +89,13 @@ begin
 		        		h_counter <= h_counter + 1; 
 		        	end if;
 		            
-		            	if (h_counter >= left_border and h_counter < H_END_DISPLAY) then
+			            if (h_counter >= h_back_porch and h_counter < H_END_DISPLAY) then
 		            		H_video_on <= '1';
 		           	 else    
 		            		H_video_on <= '0';
 		          	end if;
 		            
-		            	if (h_counter >= H_END_DISPLAY and h_counter < H_END_RETRACE) then
+				             if (h_counter >= H_END_DISPLAY and h_counter < H_END_RETRACE) then
 		            		h_sync_int <= '0'; 
 		            	else 
 		            		h_sync_int <= '1';
@@ -117,13 +116,13 @@ begin
 	               			v_counter <= v_counter + 1;
 	            		end if;
 	                
-	            		if (v_counter >= top_border and v_counter < V_END_DISPLAY) then
+			            if (v_counter >= v_back_porch and v_counter < V_END_DISPLAY) then
 	               			V_video_on <= '1';
 	            		else
 	               			V_video_on <= '0';
 	            		end if;
 	                
-	            		if (v_counter >= V_END_DISPLAY and v_counter < V_END_RETRACE) then
+		               	if (v_counter >= V_END_DISPLAY and v_counter < V_END_RETRACE) then
 	               			v_sync_int <= '0'; 
 	           	 	else 
 	               			v_sync_int <= '1';

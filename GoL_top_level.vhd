@@ -22,7 +22,6 @@ architecture rtl of top is
         port(
             clk         : in std_logic;
             p_tick      : in std_logic;
-            reset_db    : in std_logic;
             hsync_port  : out std_logic;
             vsync_port  : out std_logic;
             video_on    : out std_logic;
@@ -84,7 +83,6 @@ begin
     port map(
         clk        => clk,
         p_tick     => p_tick,
-        reset_db   => sw1_sync,
         hsync_port => vga_hs_sig,
         vsync_port => vga_vs_sig,
         video_on   => video_on,
@@ -117,7 +115,7 @@ begin
     draw : process(video_on, hcount, vcount, game_grid)
         constant cell_size : integer := 16;
         constant x_offset  : integer := 48;
-        constant y_offset  : integer := 29;
+        constant y_offset  : integer := 33;
         variable x_pix     : integer;
         variable y_pix     : integer;
         variable x_cell    : integer;
@@ -138,7 +136,7 @@ begin
                 if x_cell < 40 and y_cell < 30 and index >= 0 and index < 1200 and game_grid(index) = '1' then
                     red <= "0000"; grn <= "1111"; blu <= "0000";
                 else
-                    red <= "0000"; grn <= "0000"; blu <= "0000";
+                    red <= "1000"; grn <= "1000"; blu <= "1000";
                 end if;
             else
                 red <= "0000"; grn <= "0000"; blu <= "0000";
