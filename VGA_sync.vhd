@@ -99,15 +99,17 @@ begin
 	begin
 		if rising_edge(clk) then
 			if p_tick = '1' then
-				if v_counter = VSCAN then
-					v_counter <= (others => '0');
-				else
-					v_counter <= v_counter + 1;
+				if h_counter = HSCAN then
+					if v_counter = VSCAN then
+						v_counter <= (others => '0');
+					else
+						v_counter <= v_counter + 1;
+					end if;
 				end if;
 			end if;
 		end if;
 	end process Vsync_proc;
-
+	
 	V_video_on <= '1' when (v_counter >= v_back_porch and v_counter < V_END_DISPLAY) else '0';
 	v_sync_int <= '0' when (v_counter >= V_END_FRONT and v_counter < V_END_RETRACE) else '1';
 
