@@ -11,7 +11,8 @@
 -- explanation
 --=============================================================
 -- manages cursor position and cell toggling in edit mode
--- when sw0 is asserted, gameplay is disabled and edit mode is active
+-- sw0 = '1' runs the simulation (mode_en in game_logic); sw0 = '0' pauses it
+-- and enters edit mode, at which point the cursor becomes visible/movable
 -- buttons navigate the cursor, center button toggles cells
 --=============================================================
 
