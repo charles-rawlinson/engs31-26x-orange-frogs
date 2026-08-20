@@ -149,8 +149,27 @@ architecture rtl of top is
     -- cursor signals
     signal cursor_x_sig, cursor_y_sig : integer range 0 to 39;
     signal cell_toggle_sig : std_logic;
+    
+    -- graphics signals
+    signal x_within_cell : integer;
+    signal y_within_cell : integer;
+    signal on_border : std_logic;
+    
+    -- animation
+    signal scroll_offset : integer range 0 to 511 := 0;
+    signal diag_pos : integer;
+    signal gradient_phase : integer range 0 to 95;
+    signal r_smooth, g_smooth, b_smooth : std_logic_vector(3 downto 0);
 
-begin
+    -- animation counter
+    scroll_anim : process(clk)
+    begin
+        if rising_edge(clk) then
+            if p_tick = '1' then
+                scroll_offset <= (scroll_offset + 1) mod 512;
+            end if;
+        end if;
+    end process scroll_anim;
 
     -- reset synchronizer
 	reset_sync : process(clk)
@@ -247,26 +266,50 @@ begin
     cell_x <= x_pix / cell_size when x_pix >= 0 else 0;
     cell_y <= y_pix / cell_size when y_pix >= 0 else 0;
     cell_index <= (cell_y * 40) + cell_x;
+    
+    -- border detection
+    x_within_cell <= x_pix mod cell_size when x_pix >= 0 else 0;
+    y_within_cell <= y_pix mod cell_size when y_pix >= 0 else 0;
+    on_border <= '1' when (x_within_cell = 0 or x_within_cell = cell_size - 1 or 
+                           y_within_cell = 0 or y_within_cell = cell_size - 1) else '0';
+    
+    -- diagonal rainbow position
+    diag_pos <= x_pix + y_pix + scroll_offset;
+    gradient_phase <= (diag_pos / 2) mod 96;
+    
+    -- smooth rainbow gradient (0-31: R->Y->G, 32-63: G->C->B, 64-95: B->M->R)
+    r_smooth <= "1111" when gradient_phase < 32 else
+                std_logic_vector(to_unsigned(15 - (gradient_phase - 32) / 2, 4)) when gradient_phase < 64 else
+                std_logic_vector(to_unsigned((gradient_phase - 64) / 2, 4));
+    g_smooth <= std_logic_vector(to_unsigned((gradient_phase) / 2, 4)) when gradient_phase < 32 else
+                "1111" when gradient_phase < 64 else
+                std_logic_vector(to_unsigned(15 - (gradient_phase - 64) / 2, 4));
+    b_smooth <= "0000" when gradient_phase < 32 else
+                std_logic_vector(to_unsigned((gradient_phase - 32) / 2, 4)) when gradient_phase < 64 else
+                "1111";
 
     -- processes
-    draw : process(video_on, x_pix, y_pix, cell_x, cell_y, cell_index, game_grid, cursor_x_sig, cursor_y_sig, sw0_sync)
+    draw : process(video_on, x_pix, y_pix, cell_x, cell_y, cell_index, game_grid, cursor_x_sig, cursor_y_sig, sw0_sync, on_border, r_smooth, g_smooth, b_smooth)
     begin
         if video_on = '0' then
             red <= "0000"; grn <= "0000"; blu <= "0000";
         else
             if x_pix >= 0 and y_pix >= 0 then
                 if cell_x < 40 and cell_y < 30 and cell_index >= 0 and cell_index < 1200 then
-                    -- cursor highlight in edit mode
-                    if sw0_sync = '1' and cell_x = cursor_x_sig and cell_y = cursor_y_sig then
-                        red <= "1111"; grn <= "1111"; blu <= "0000";
-                    -- live cells in green
+                    -- cursor border in edit mode
+                    if sw0_sync = '1' and cell_x = cursor_x_sig and cell_y = cursor_y_sig and on_border = '1' then
+                        red <= "1111"; grn <= "0000"; blu <= "0000";
+                    -- live cells with smooth scrolling rainbow
                     elsif game_grid(cell_index) = '1' then
-                        red <= "0000"; grn <= "1111"; blu <= "0000";
-                    -- dead cells in purple
+                        red <= r_smooth;
+                        grn <= g_smooth;
+                        blu <= b_smooth;
+                    -- dead cells in black
                     else
-                        red <= "1000"; grn <= "0000"; blu <= "1000";
+                        red <= "0000"; grn <= "0000"; blu <= "0000";
                     end if;
                 else
+                    -- out of bounds, draw blue
                     red <= "0000"; grn <= "0000"; blu <= "1111";
                 end if;
             else
