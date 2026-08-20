@@ -21,6 +21,7 @@ architecture rtl of game_logic is
 
     signal grid_reg        : grid_t := (others => (others => '0'));
     signal next_grid_sig   : grid_t := (others => (others => '0'));
+    signal neighbor_count_next : integer range 0 to 8 := 0;
 
     type fsm_state is (HOLD, EVALUATE, COMMIT);
     signal current_state   : fsm_state := HOLD;
@@ -121,14 +122,44 @@ begin
         end loop;
     end process output_logic;
 
-    neighbor_count_sig <=
-        (1 when (row_index > 0 and col_index > 0 and grid_reg(row_index - 1, col_index - 1) = '1') else 0) +
-        (1 when (row_index > 0 and grid_reg(row_index - 1, col_index) = '1') else 0) +
-        (1 when (row_index > 0 and col_index < cols - 1 and grid_reg(row_index - 1, col_index + 1) = '1') else 0) +
-        (1 when (col_index > 0 and grid_reg(row_index, col_index - 1) = '1') else 0) +
-        (1 when (col_index < cols - 1 and grid_reg(row_index, col_index + 1) = '1') else 0) +
-        (1 when (row_index < rows - 1 and col_index > 0 and grid_reg(row_index + 1, col_index - 1) = '1') else 0) +
-        (1 when (row_index < rows - 1 and grid_reg(row_index + 1, col_index) = '1') else 0) +
-        (1 when (row_index < rows - 1 and col_index < cols - 1 and grid_reg(row_index + 1, col_index + 1) = '1') else 0);
+    neighbor_count_process : process(grid_reg, row_index, col_index)
+    begin
+        neighbor_count_next <= 0;
+
+        -- Top-left
+        if row_index > 0 and col_index > 0 and grid_reg(row_index - 1, col_index - 1) = '1' then
+            neighbor_count_next <= neighbor_count_next + 1;
+        end if;
+        -- Top
+        if row_index > 0 and grid_reg(row_index - 1, col_index) = '1' then
+            neighbor_count_next <= neighbor_count_next + 1;
+        end if;
+        -- Top-right
+        if row_index > 0 and col_index < cols - 1 and grid_reg(row_index - 1, col_index + 1) = '1' then
+            neighbor_count_next <= neighbor_count_next + 1;
+        end if;
+        -- Left
+        if col_index > 0 and grid_reg(row_index, col_index - 1) = '1' then
+            neighbor_count_next <= neighbor_count_next + 1;
+        end if;
+        -- Right
+        if col_index < cols - 1 and grid_reg(row_index, col_index + 1) = '1' then
+            neighbor_count_next <= neighbor_count_next + 1;
+        end if;
+        -- Bottom-left
+        if row_index < rows - 1 and col_index > 0 and grid_reg(row_index + 1, col_index - 1) = '1' then
+            neighbor_count_next <= neighbor_count_next + 1;
+        end if;
+        -- Bottom
+        if row_index < rows - 1 and grid_reg(row_index + 1, col_index) = '1' then
+            neighbor_count_next <= neighbor_count_next + 1;
+        end if;
+        -- Bottom-right
+        if row_index < rows - 1 and col_index < cols - 1 and grid_reg(row_index + 1, col_index + 1) = '1' then
+            neighbor_count_next <= neighbor_count_next + 1;
+        end if;
+    end process neighbor_count_process;
+
+    neighbor_count_sig <= neighbor_count_next;
 
 end architecture rtl;
