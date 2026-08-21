@@ -51,15 +51,16 @@ end entity vga_graphics;
 -- architecture
 --=============================================================
 architecture rtl of vga_graphics is
-    --=========================================================
     -- signals
-    --=========================================================
     signal x_within_cell : integer;
     signal y_within_cell : integer;
     signal on_border : std_logic;
 
     signal scroll_offset : integer range 0 to 511 := 0;
+    signal video_on_d : std_logic := '0';
+    signal frame_tick : std_logic := '0';
     signal diag_pos : integer;
+    signal frame_div : integer range 0 to 3 := 0;
     signal gradient_phase : integer range 0 to 95;
     signal r_smooth, g_smooth, b_smooth : std_logic_vector(3 downto 0);
 
@@ -67,12 +68,30 @@ architecture rtl of vga_graphics is
 
 begin
 
-    -- animation counter
+    -- detect the start of a new frame
+    frame_detect : process (clk)
+    begin
+        if rising_edge(clk) then
+            video_on_d <= video_on;
+            frame_tick <= video_on and not video_on_d;
+        end if;
+    end process frame_detect;
+
+    -- advances one step per 4 frames
     scroll_anim : process (clk)
     begin
         if rising_edge(clk) then
-            if p_tick = '1' then
-                scroll_offset <= (scroll_offset + 1) mod 512;
+            if frame_tick = '1' then
+                if frame_div < 3 then
+                    frame_div <= frame_div + 1;
+                else
+                    frame_div <= 0;
+                    if scroll_offset < 511 then
+                        scroll_offset <= scroll_offset + 1;
+                    else
+                        scroll_offset <= 0;
+                    end if;
+                end if;
             end if;
         end if;
     end process scroll_anim;
@@ -87,8 +106,8 @@ begin
                  '0';
 
     -- diagonal rainbow position
-    diag_pos <= x_pix + y_pix + scroll_offset;
-    gradient_phase <= (diag_pos / 2) mod 96;
+    diag_pos <= 2*x_pix + y_pix + scroll_offset;
+    gradient_phase <= (diag_pos / 6) mod 96;
 
     -- smooth rainbow gradient (0-31: R->Y->G, 32-63: G->C->B, 64-95: B->M->R)
     r_smooth <= "1111" when gradient_phase < 32 else
@@ -112,7 +131,7 @@ begin
             if x_pix >= 0 and y_pix >= 0 then
                 if cell_x < 40 and cell_y < 30 and cell_index >= 0 and cell_index < 1200 then
                     -- cursor border in edit mode
-                    if sw0_sync = '1' and cell_x = cursor_x and cell_y = cursor_y and on_border = '1' then
+                    if sw0_sync = '0' and cell_x = cursor_x and cell_y = cursor_y and on_border = '1' then
                         red <= "1111";
                         grn <= "0000";
                         blu <= "0000";

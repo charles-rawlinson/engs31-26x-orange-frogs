@@ -86,6 +86,9 @@ architecture rtl of top is
             reset : in std_logic;
             mode_en : in std_logic;
             update_tick : in std_logic;
+            cell_toggle : in std_logic;
+            cursor_x : in integer range 0 to cols - 1;
+            cursor_y : in integer range 0 to rows - 1;
             grid_out : out std_logic_vector((rows * cols) - 1 downto 0)
         );
     end component;
@@ -125,7 +128,6 @@ architecture rtl of top is
         );
         port (
             clk : in std_logic;
-            reset : in std_logic;
             sw0 : in std_logic;
             left_mp : in std_logic;
             right_mp : in std_logic;
@@ -268,7 +270,6 @@ begin
     )
     port map(
         clk => clk,
-        reset => sw1_sync,
         sw0 => sw0_sync,
         left_mp => left_mp,
         right_mp => right_mp,

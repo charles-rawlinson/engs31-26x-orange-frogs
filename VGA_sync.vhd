@@ -87,21 +87,12 @@ begin
 				else
 					h_counter <= h_counter + 1;
 				end if;
-
-				if (h_counter >= h_back_porch and h_counter < H_END_DISPLAY) then
-					H_video_on <= '1';
-				else
-					H_video_on <= '0';
-				end if;
-
-				if (h_counter >= H_END_DISPLAY and h_counter < H_END_RETRACE) then
-					h_sync_int <= '0';
-				else
-					h_sync_int <= '1';
-				end if;
 			end if;
 		end if;
 	end process Hsync_proc;
+
+	H_video_on <= '1' when (h_counter >= h_back_porch and h_counter < H_END_DISPLAY) else '0';
+	h_sync_int <= '0' when (h_counter >= H_END_FRONT and h_counter < H_END_RETRACE) else '1';
 
 	-- v sync generating process
 	Vsync_proc : process (clk)
@@ -114,22 +105,13 @@ begin
 					else
 						v_counter <= v_counter + 1;
 					end if;
-
-					if (v_counter >= v_back_porch and v_counter < V_END_DISPLAY) then
-						V_video_on <= '1';
-					else
-						V_video_on <= '0';
-					end if;
-
-					if (v_counter >= V_END_DISPLAY and v_counter < V_END_RETRACE) then
-						v_sync_int <= '0';
-					else
-						v_sync_int <= '1';
-					end if;
 				end if;
 			end if;
 		end if;
 	end process Vsync_proc;
+	
+	V_video_on <= '1' when (v_counter >= v_back_porch and v_counter < V_END_DISPLAY) else '0';
+	v_sync_int <= '0' when (v_counter >= V_END_FRONT and v_counter < V_END_RETRACE) else '1';
 
 	hcount <= std_logic_vector(h_counter);
 	vcount <= std_logic_vector(v_counter);
