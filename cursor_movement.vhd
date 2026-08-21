@@ -39,6 +39,11 @@ entity cursor_movement is
         up_mp : in std_logic;
         down_mp : in std_logic;
         center_mp : in std_logic;
+        left_db : in std_logic;
+        right_db : in std_logic;
+        up_db : in std_logic;
+        down_db : in std_logic;
+        center_db : in std_logic;
         cursor_x : out integer range 0 to cols - 1;
         cursor_y : out integer range 0 to rows - 1;
         cell_toggle : out std_logic -- pulse to toggle selected cell
@@ -50,6 +55,8 @@ end entity cursor_movement;
 --=============================================================
 architecture rtl of cursor_movement is
     -- signals
+    constant repeat_time : integer := 10000000;
+    signal repeat_count : integer range 0 to repeat_time := 0; 
     signal cursor_x_reg : integer range 0 to cols - 1 := 0;
     signal cursor_y_reg : integer range 0 to rows - 1 := 0;
     signal cursor_x_next : integer range 0 to cols - 1 := 0;
@@ -104,6 +111,33 @@ begin
             if center_mp = '1' then
                 cell_toggle_next <= '1';
             end if;
+
+            elsif left_db = '1' or right_db = '1' or
+                  up_db = '1' or down_db = '1' then
+
+                if repeat_count = REPEAT_TIME then
+                    repeat_count <= 0;
+
+                    if left_db = '1' and cursor_x_reg > 0 then
+                        cursor_x_reg <= cursor_x_reg - 1;
+
+                    elsif right_db = '1' and cursor_x_reg < cols - 1 then
+                        cursor_x_reg <= cursor_x_reg + 1;
+
+                    elsif up_db = '1' and cursor_y_reg > 0 then
+                        cursor_y_reg <= cursor_y_reg - 1;
+
+                    elsif down_db = '1' and cursor_y_reg < rows - 1 then
+                        cursor_y_reg <= cursor_y_reg + 1;
+                    end if;
+                    
+                    elsif center_db = '1' then 
+                        cell_toggle_next <= '1';
+                        
+                else
+                    repeat_count <= repeat_count + 1;
+                end if; 
+            end if; 
         end if;
     end process cursor_logic;
 
