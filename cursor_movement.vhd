@@ -55,7 +55,7 @@ end entity cursor_movement;
 --=============================================================
 architecture rtl of cursor_movement is
     -- signals
-    constant repeat_time : integer := 10000000;
+    constant repeat_time : integer := 20000000;
     signal repeat_count : integer range 0 to repeat_time := 0; 
     signal cursor_x_reg : integer range 0 to cols - 1 := 0;
     signal cursor_y_reg : integer range 0 to rows - 1 := 0;
@@ -66,91 +66,138 @@ architecture rtl of cursor_movement is
 
 begin
 
-    -- cursor state register
-    cursor_reg : process (clk)
+     --=========================================================
+    -- Cursor movement and cell toggle
+    --=========================================================
+    cursor_process : process(clk)
     begin
         if rising_edge(clk) then
-            cursor_x_reg <= cursor_x_next;
-            cursor_y_reg <= cursor_y_next;
-        end if;
-    end process cursor_reg;
 
-    -- cursor movement and toggle logic
-    cursor_logic : process (cursor_x_reg, cursor_y_reg, left_mp, right_mp, up_mp, down_mp, center_mp, sw0)
-    begin
-        -- default: hold current position
-        cursor_x_next <= cursor_x_reg;
-        cursor_y_next <= cursor_y_reg;
-        cell_toggle_next <= '0';
+            -- only allow movement/editing when paused
+            if sw0 = '0' then
 
-        -- only move cursor and allow toggle when in edit mode
-        if sw0 = '0' then
-            -- horizontal movement
-            if left_mp = '1' then
-                if cursor_x_reg > 0 then
-                    cursor_x_next <= cursor_x_reg - 1;
+                --=================================================
+                -- CENTER BUTTON
+                -- Only toggle once when center is initially pressed
+                --=================================================
+                if center_mp = '1' then
+                    cell_toggle <= '1';
+                else
+                    cell_toggle <= '0';
                 end if;
-            elsif right_mp = '1' then
-                if cursor_x_reg < cols - 1 then
-                    cursor_x_next <= cursor_x_reg + 1;
-                end if;
-            end if;
 
-            -- vertical movement
-            if up_mp = '1' then
-                if cursor_y_reg > 0 then
-                    cursor_y_next <= cursor_y_reg - 1;
-                end if;
-            elsif down_mp = '1' then
-                if cursor_y_reg < rows - 1 then
-                    cursor_y_next <= cursor_y_reg + 1;
-                end if;
-            end if;
 
-            -- toggle cell when center button pressed
-            if center_mp = '1' then
-                cell_toggle_next <= '1';
-            end if;
+                --=================================================
+                -- INITIAL MOVEMENT
+                -- monopulse gives one movement when button is pressed
+                --=================================================
+                if left_mp = '1' then
+                    if cursor_x_reg > 0 then
+                        cursor_x_reg <= cursor_x_reg - 1;
+                    end if;
 
-            elsif left_db = '1' or right_db = '1' or
-                  up_db = '1' or down_db = '1' then
-
-                if repeat_count = REPEAT_TIME then
                     repeat_count <= 0;
 
-                    if left_db = '1' and cursor_x_reg > 0 then
-                        cursor_x_reg <= cursor_x_reg - 1;
-
-                    elsif right_db = '1' and cursor_x_reg < cols - 1 then
+                elsif right_mp = '1' then
+                    if cursor_x_reg < cols - 1 then
                         cursor_x_reg <= cursor_x_reg + 1;
+                    end if;
 
-                    elsif up_db = '1' and cursor_y_reg > 0 then
+                    repeat_count <= 0;
+
+                elsif up_mp = '1' then
+                    if cursor_y_reg > 0 then
                         cursor_y_reg <= cursor_y_reg - 1;
+                    end if;
 
-                    elsif down_db = '1' and cursor_y_reg < rows - 1 then
+                    repeat_count <= 0;
+
+                elsif down_mp = '1' then
+                    if cursor_y_reg < rows - 1 then
                         cursor_y_reg <= cursor_y_reg + 1;
                     end if;
-                    
-                    elsif center_db = '1' then 
-                        cell_toggle_next <= '1';
-                        
-                else
-                    repeat_count <= repeat_count + 1;
-                end if; 
-            end if; 
-        end if;
-    end process cursor_logic;
 
-    -- output assignments
+                    repeat_count <= 0;
+
+
+                --=================================================
+                -- HELD MOVEMENT
+                -- wait repeat_time clocks, then move again
+                --=================================================
+                elsif left_db = '1' then
+
+                    if repeat_count = repeat_time then
+                        repeat_count <= 0;
+
+                        if cursor_x_reg > 0 then
+                            cursor_x_reg <= cursor_x_reg - 1;
+                        end if;
+
+                    else
+                        repeat_count <= repeat_count + 1;
+                    end if;
+
+
+                elsif right_db = '1' then
+
+                    if repeat_count = repeat_time then
+                        repeat_count <= 0;
+
+                        if cursor_x_reg < cols - 1 then
+                            cursor_x_reg <= cursor_x_reg + 1;
+                        end if;
+
+                    else
+                        repeat_count <= repeat_count + 1;
+                    end if;
+
+
+                elsif up_db = '1' then
+
+                    if repeat_count = repeat_time then
+                        repeat_count <= 0;
+
+                        if cursor_y_reg > 0 then
+                            cursor_y_reg <= cursor_y_reg - 1;
+                        end if;
+
+                    else
+                        repeat_count <= repeat_count + 1;
+                    end if;
+
+
+                elsif down_db = '1' then
+
+                    if repeat_count = repeat_time then
+                        repeat_count <= 0;
+
+                        if cursor_y_reg < rows - 1 then
+                            cursor_y_reg <= cursor_y_reg + 1;
+                        end if;
+
+                    else
+                        repeat_count <= repeat_count + 1;
+                    end if;
+
+                else
+                    -- no directional button is being held
+                    repeat_count <= 0;
+                end if;
+
+            else
+                -- simulation mode
+                repeat_count <= 0;
+                cell_toggle <= '0';
+            end if;
+
+        end if;
+    end process cursor_process;
+
+
+    --=========================================================
+    -- Outputs
+    --=========================================================
     cursor_x <= cursor_x_reg;
     cursor_y <= cursor_y_reg;
-
-    -- toggle output register
-    toggle_reg : process (clk)
-    begin
-        if rising_edge(clk) then
-            cell_toggle <= cell_toggle_next;
-        end if;
-    end process toggle_reg;
 
 end architecture rtl;

@@ -306,7 +306,7 @@ begin
         cell_y => cell_y,
         cell_index => cell_index,
         game_grid => game_grid,
-        image_data => image data,
+        image_data => image_data,
         cursor_x => cursor_x_sig,
         cursor_y => cursor_y_sig,
         sw0_sync => sw0_sync,
@@ -325,8 +325,8 @@ begin
     cell_index <= (cell_y * 40) + cell_x;
 
     --tad coordinate calculations
-    image_x = x_pix / 4 when x_pix >= 0 else 0;
-    image_y = y_pix / 4 when y_pix >= 0 else 0;
+    image_x <= x_pix / 4 when x_pix >= 0 else 0;
+    image_y <= y_pix / 4 when y_pix >= 0 else 0;
     image_address <= std_logic_vector(to_unsigned((image_y * 160) + image_x, 15));
 
     -- port assignments
