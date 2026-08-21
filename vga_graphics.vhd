@@ -37,6 +37,7 @@ entity vga_graphics is
         cell_y : in integer;
         cell_index : in integer;
         game_grid : in std_logic_vector(1199 downto 0);
+        image_data : in std_logic_vector(11 downto 0);
         cursor_x : in integer;
         cursor_y : in integer;
         sw0_sync : in std_logic;
@@ -122,9 +123,13 @@ begin
                         blu <= b_smooth;
                         -- dead cells in black
                     else
-                        red <= "0000";
-                        grn <= "0000";
-                        blu <= "0000";
+                        -- red <= "0000";
+                        -- grn <= "0000";
+                        -- blu <= "0000";
+                        --for tad face
+                        red <= image_data(11 downto 8);
+                        grn <= image_data(7 downto 4);
+                        blu <= image_data(3 downto 0);
                     end if;
                 else
                     -- out of bounds, draw blue

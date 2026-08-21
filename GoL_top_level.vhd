@@ -152,6 +152,7 @@ architecture rtl of top is
             cell_y : in integer;
             cell_index : in integer;
             game_grid : in std_logic_vector(1199 downto 0);
+            image_data : in std_logic_vector(11 downto 0);
             cursor_x : in integer;
             cursor_y : in integer;
             sw0_sync : in std_logic;
@@ -176,6 +177,11 @@ architecture rtl of top is
     signal sw0_meta : std_logic := '0';
     signal sw0_sync : std_logic := '0';
 
+    --TAD signals
+    signal image_address  : std_logic_vector (14 downto 0);
+    signal image_data     : std_logic_vector (11 downto 0);
+    signal image_x : integer; 
+    signal image_y : integer; 
     -- debouncer signals
     signal left_mp, right_mp, up_mp, down_mp, center_mp : std_logic;
 
@@ -289,6 +295,7 @@ begin
         cell_y => cell_y,
         cell_index => cell_index,
         game_grid => game_grid,
+        image_data => image data,
         cursor_x => cursor_x_sig,
         cursor_y => cursor_y_sig,
         sw0_sync => sw0_sync,
@@ -306,11 +313,26 @@ begin
               0;
     cell_index <= (cell_y * 40) + cell_x;
 
+    --tad coordinate calculations
+    image_x = x_pix / 4 when x_pix >= 0 else 0;
+    image_y = y_pix / 4 when y_pix >= 0 else 0;
+    image_address <= std_logic_vector(to_unsigned((image_y * 160) + image_x, 15));
+
     -- port assignments
     vga_r <= red;
     vga_g <= grn;
     vga_b <= blu;
     vga_hs <= vga_hs_sig;
     vga_vs <= vga_vs_sig;
+
+    --TAD face image memory 
+    professor_image : blk_mem_gen_0
+    port map (
+        clka  => clk,
+        wea   => "0",
+        addra => image_address,
+        dina  => (others => '0'),
+        douta => image_data
+    );
 
 end architecture rtl;
