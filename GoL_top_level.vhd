@@ -134,6 +134,11 @@ architecture rtl of top is
             up_mp : in std_logic;
             down_mp : in std_logic;
             center_mp : in std_logic;
+            left_db : in std_logic;
+            right_db : in std_logic;
+            up_db : in std_logic;
+            down_db : in std_logic;
+            center_db : in std_logic;
             cursor_x : out integer range 0 to cols - 1;
             cursor_y : out integer range 0 to rows - 1;
             cell_toggle : out std_logic
