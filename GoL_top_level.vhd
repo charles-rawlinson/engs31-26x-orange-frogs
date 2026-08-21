@@ -191,7 +191,7 @@ architecture rtl of top is
     signal image_y : integer; 
     -- debouncer signals
     signal left_mp, right_mp, up_mp, down_mp, center_mp : std_logic;
-
+    signal left_db, right_db, up_db, down_db, center_db : std_logic;
     -- cursor signals
     signal cursor_x_sig, cursor_y_sig : integer range 0 to 39;
     signal cell_toggle_sig : std_logic;
@@ -256,11 +256,11 @@ begin
         btn_center_port => btn_center,
         reset_db => open,
         start_stop_db => open,
-        left_db => open,
-        right_db => open,
-        up_db => open,
-        down_db => open,
-        center_db => open,
+        left_db => left_db,
+        right_db => right_db,
+        up_db => up_db,
+        down_db => down_db,
+        center_db => center_db,
         left_mp => left_mp,
         right_mp => right_mp,
         up_mp => up_mp,
@@ -280,6 +280,11 @@ begin
         right_mp => right_mp,
         up_mp => up_mp,
         down_mp => down_mp,
+        left_db => left_db,
+        right_db => right_db,
+        up_db => up_db,
+        down_db => down_db,
+        center_db => center_db,
         center_mp => center_mp,
         cursor_x => cursor_x_sig,
         cursor_y => cursor_y_sig,
