@@ -106,7 +106,7 @@ begin
                  '0';
 
     -- diagonal rainbow position
-    diag_pos <= 2*x_pix + y_pix + scroll_offset;
+    diag_pos <= 2 * x_pix + y_pix + scroll_offset;
     gradient_phase <= (diag_pos / 6) mod 96;
 
     -- smooth rainbow gradient (0-31: R->Y->G, 32-63: G->C->B, 64-95: B->M->R)

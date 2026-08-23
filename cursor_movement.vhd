@@ -56,7 +56,7 @@ end entity cursor_movement;
 architecture rtl of cursor_movement is
     -- signals
     constant repeat_time : integer := 20000000;
-    signal repeat_count : integer range 0 to repeat_time := 0; 
+    signal repeat_count : integer range 0 to repeat_time := 0;
     signal cursor_x_reg : integer range 0 to cols - 1 := 0;
     signal cursor_y_reg : integer range 0 to rows - 1 := 0;
     signal cursor_x_next : integer range 0 to cols - 1 := 0;
@@ -65,32 +65,22 @@ architecture rtl of cursor_movement is
     signal cell_toggle_next : std_logic := '0';
 
 begin
-
-     --=========================================================
-    -- Cursor movement and cell toggle
-    --=========================================================
-    cursor_process : process(clk)
+    -- cursor movement and cell toggle
+    cursor_process : process (clk)
     begin
         if rising_edge(clk) then
 
             -- only allow movement/editing when paused
             if sw0 = '0' then
 
-                --=================================================
-                -- CENTER BUTTON
-                -- Only toggle once when center is initially pressed
-                --=================================================
+                -- center, only toggle once when center is initially pressed
                 if center_mp = '1' then
                     cell_toggle <= '1';
                 else
                     cell_toggle <= '0';
                 end if;
 
-
-                --=================================================
-                -- INITIAL MOVEMENT
-                -- monopulse gives one movement when button is pressed
-                --=================================================
+                -- initial, monopulse gives one movement when button is pressed
                 if left_mp = '1' then
                     if cursor_x_reg > 0 then
                         cursor_x_reg <= cursor_x_reg - 1;
@@ -119,11 +109,7 @@ begin
 
                     repeat_count <= 0;
 
-
-                --=================================================
-                -- HELD MOVEMENT
-                -- wait repeat_time clocks, then move again
-                --=================================================
+                    -- held, wait repeat_time clocks, then move again
                 elsif left_db = '1' then
 
                     if repeat_count = repeat_time then
@@ -136,7 +122,6 @@ begin
                     else
                         repeat_count <= repeat_count + 1;
                     end if;
-
 
                 elsif right_db = '1' then
 
@@ -151,7 +136,6 @@ begin
                         repeat_count <= repeat_count + 1;
                     end if;
 
-
                 elsif up_db = '1' then
 
                     if repeat_count = repeat_time then
@@ -164,7 +148,6 @@ begin
                     else
                         repeat_count <= repeat_count + 1;
                     end if;
-
 
                 elsif down_db = '1' then
 
@@ -192,7 +175,6 @@ begin
 
         end if;
     end process cursor_process;
-
 
     --=========================================================
     -- Outputs
