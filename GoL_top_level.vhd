@@ -331,8 +331,8 @@ begin
         cursor_x => cursor_x_sig,
         cursor_y => cursor_y_sig,
         sw0_sync => sw0_sync,
-        sw6_sync => sw6_sync;
-        sw7_sync => sw7_sync;
+        sw6_sync => sw6_sync,
+        sw7_sync => sw7_sync,
         vga_r => red,
         vga_g => grn,
         vga_b => blu
