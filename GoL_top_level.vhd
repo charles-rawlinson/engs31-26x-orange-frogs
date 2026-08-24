@@ -46,7 +46,7 @@ entity top is
         vga_vs : out std_logic;
         vga_r : out std_logic_vector(3 downto 0);
         vga_g : out std_logic_vector(3 downto 0);
-        vga_b : out std_logic_vector(3 downto 0);
+        vga_b : out std_logic_vector(3 downto 0)
     );
 end entity top;
 
@@ -324,6 +324,8 @@ begin
         cursor_x => cursor_x_sig,
         cursor_y => cursor_y_sig,
         sw0_sync => sw0_sync,
+        sw6_sync => sw6_sync;
+        sw7_sync => sw7_sync;
         vga_r => red,
         vga_g => grn,
         vga_b => blu
