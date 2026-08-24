@@ -33,7 +33,8 @@ architecture rtl of gen_timer is
 
     -- free running counter
     signal cnt : integer range 0 to tick_max := 0;
-    -- pixel clock divider (divide by 4)
+
+    -- pixel clock divider
     signal pix_cnt : integer range 0 to 3 := 0;
 
 begin
@@ -41,33 +42,45 @@ begin
     process (clk)
     begin
         if rising_edge(clk) then
-            if sw9_sync = '1' then 
-                if cnt >= (tick_max / 5) then
-                    cnt <= 0; 
-                else 
-                    cnt <= cnt + 1; 
+
+            -- generation timer
+            if sw9_sync = '1' then
+
+                -- FAST MODE
+                if cnt = tick_max / 5 then
+                    cnt <= 0;
+                else
+                    cnt <= cnt + 1;
                 end if;
 
-            else    
+            else
+
+                -- NORMAL MODE
                 if cnt = tick_max then
                     cnt <= 0;
                 else
                     cnt <= cnt + 1;
                 end if;
 
-            -- pixel tick divider: one-cycle pulse every 4 clk
+            end if;
+
+            -- pixel tick divider: one-cycle pulse every 4 clocks
             if pix_cnt = 3 then
                 pix_cnt <= 0;
             else
                 pix_cnt <= pix_cnt + 1;
             end if;
+
         end if;
     end process;
 
-    tick <= '1' when 
-        ((sw9_sync = '1' and cnt = (tick_max / 5)) or (sw9_sync = '0' and cnt = (tick_max * 5) ))
-        else
-            '0';
+    -- generation tick
+    tick <= '1' when
+        (sw9_sync = '1' and cnt = tick_max / 5) or
+        (sw9_sync = '0' and cnt = tick_max)
+        else '0';
+
+    -- pixel tick
     p_tick <= '1' when pix_cnt = 0 else
               '0';
 
