@@ -65,7 +65,7 @@ begin
     end process;
 
     tick <= '1' when 
-        ((sw9_sync = '1' and cnt = (tick_max / 5)) or (sw9_sync = '0' and cnt = (tick_max * 5) ))
+        ((sw9_sync = '1' and cnt = (tick_max / 5)) or (sw9_sync = '0' and cnt = tick_max ))
         else
             '0';
     p_tick <= '1' when pix_cnt = 0 else
