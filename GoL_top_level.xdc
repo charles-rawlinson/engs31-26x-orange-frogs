@@ -25,6 +25,8 @@ set_property CFGBVS VCCO [current_design]
 ## mode control
 set_property -dict { PACKAGE_PIN V17 IOSTANDARD LVCMOS33 } [get_ports sw0]
 set_property -dict { PACKAGE_PIN V16 IOSTANDARD LVCMOS33 } [get_ports sw1]
+set_property -dict { PACKAGE_PIN V17 IOSTANDARD LVCMOS33 } [get_ports sw6]
+set_property -dict { PACKAGE_PIN V16 IOSTANDARD LVCMOS33 } [get_ports sw7]
 
 ## buttons
 set_property -dict { PACKAGE_PIN U18 IOSTANDARD LVCMOS33 } [get_ports btn_center]
