@@ -41,6 +41,8 @@ entity vga_graphics is
         cursor_x : in integer;
         cursor_y : in integer;
         sw0_sync : in std_logic;
+        sw6_sync : in std_logic; 
+        sw7_sync : in std_logic;
         vga_r : out std_logic_vector(3 downto 0);
         vga_g : out std_logic_vector(3 downto 0);
         vga_b : out std_logic_vector(3 downto 0)
@@ -77,11 +79,11 @@ begin
         end if;
     end process frame_detect;
 
-    -- advances one step per 4 frames
+    -- advances one step per 60 frames
     scroll_anim : process (clk)
     begin
         if rising_edge(clk) then
-            if frame_tick = '1' then
+            if frame_tick = '1' then0
                 if frame_div < 59 then
                     frame_div <= frame_div + 1;
                 else
@@ -121,7 +123,7 @@ begin
                 "1111";
 
     -- draw process
-    draw : process (video_on, x_pix, y_pix, cell_x, cell_y, cell_index, game_grid, cursor_x, cursor_y, sw0_sync, on_border, r_smooth, g_smooth, b_smooth)
+    draw : process (video_on, x_pix, y_pix, cell_x, cell_y, cell_index, game_grid, cursor_x, cursor_y, sw0_sync, sw6_sync, sw7_sync, on_border, r_smooth, g_smooth, b_smooth)
     begin
         if video_on = '0' then
             red <= "0000";
@@ -136,19 +138,27 @@ begin
                         grn <= "0000";
                         blu <= "0000";
                         -- live cells with smooth scrolling rainbow
-                    elsif game_grid(cell_index) = '1' then
-                        red <= r_smooth;
-                        grn <= g_smooth;
-                        blu <= b_smooth;
+                    elsif game_grid(cell_index) = '1' then 
+                        if sw7_sync = '1' then -- rainbow gradient switch
+                            red <= r_smooth;
+                            grn <= g_smooth;
+                            blu <= b_smooth;
+                        else 
+                            red <= "1111";
+                            grn <= "0110";
+                            blu <= "0101";
                         -- dead cells in black
+                        end if; 
                     else
-                        -- red <= "0000";
-                        -- grn <= "0000";
-                        -- blu <= "0000";
-                        --for tad face
-                        red <= image_data(11 downto 8);
-                        grn <= image_data(7 downto 4);
-                        blu <= image_data(3 downto 0);
+                        if sw6_sync = '1' then -- tad switch 
+                            red <= image_data(11 downto 8);
+                            grn <= image_data(7 downto 4);
+                            blu <= image_data(3 downto 0);
+                        else
+                            red <= "0000";
+                            grn <= "0000";
+                            blu <= "0000";
+                        end if; 
                     end if;
                 else
                     -- out of bounds, draw blue

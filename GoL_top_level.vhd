@@ -39,11 +39,14 @@ entity top is
         btn_up : in std_logic;
         btn_down : in std_logic;
         btn_center : in std_logic;
+        sw6 : in std_logic; 
+        sw7 : in std_logic; 
+        sw9 : in std_logic; 
         vga_hs : out std_logic;
         vga_vs : out std_logic;
         vga_r : out std_logic_vector(3 downto 0);
         vga_g : out std_logic_vector(3 downto 0);
-        vga_b : out std_logic_vector(3 downto 0)
+        vga_b : out std_logic_vector(3 downto 0);
     );
 end entity top;
 
@@ -163,6 +166,8 @@ architecture rtl of top is
             cursor_x : in integer;
             cursor_y : in integer;
             sw0_sync : in std_logic;
+            sw6_sync : in std_logic; 
+            sw7_sync : in std_logic; 
             vga_r : out std_logic_vector(3 downto 0);
             vga_g : out std_logic_vector(3 downto 0);
             vga_b : out std_logic_vector(3 downto 0)
@@ -183,6 +188,10 @@ architecture rtl of top is
     signal sw1_sync : std_logic := '0';
     signal sw0_meta : std_logic := '0';
     signal sw0_sync : std_logic := '0';
+    signal sw6_meta : std_logic := '0';
+    signal sw6_sync : std_logic := '0';
+    signal sw7_meta : std_logic := '0';
+    signal sw7_sync : std_logic := '0';
 
     --TAD signals
     signal image_address : std_logic_vector (14 downto 0);
@@ -206,6 +215,11 @@ begin
             sw1_sync <= sw1_meta;
             sw0_meta <= sw0;
             sw0_sync <= sw0_meta;
+            sw6_meta <= sw6;
+            sw6_sync <= sw6_meta;
+            sw7_meta <= sw7;
+            sw7_sync <= sw7_meta;
+
         end if;
     end process reset_sync;
 
