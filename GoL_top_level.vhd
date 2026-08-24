@@ -75,7 +75,9 @@ architecture rtl of top is
         port (
             clk : in std_logic;
             tick : out std_logic;
-            p_tick : out std_logic
+            p_tick : out std_logic;
+            sw9_sync : in std_logic; 
+
         );
     end component;
 
@@ -192,6 +194,8 @@ architecture rtl of top is
     signal sw6_sync : std_logic := '0';
     signal sw7_meta : std_logic := '0';
     signal sw7_sync : std_logic := '0';
+    signal sw9_meta : std_logic := '0';
+    signal sw9_sync : std_logic := '0';
 
     --TAD signals
     signal image_address : std_logic_vector (14 downto 0);
@@ -219,6 +223,8 @@ begin
             sw6_sync <= sw6_meta;
             sw7_meta <= sw7;
             sw7_sync <= sw7_meta;
+            sw9_meta <= sw9;
+            sw9_sync <= sw9_meta;
 
         end if;
     end process reset_sync;
@@ -239,7 +245,8 @@ begin
     port map(
         clk => clk,
         tick => gen_tick,
-        p_tick => p_tick
+        p_tick => p_tick,
+        sw9_sync => sw9_sync
     );
 
     life : game_logic

@@ -20,6 +20,7 @@ entity gen_timer is
     );
     port (
         clk : in std_logic;
+        sw9_sync: in std_logic; 
         tick : out std_logic;
         p_tick : out std_logic -- pixel tick: one pulse every 4 clocks
     );
@@ -40,11 +41,19 @@ begin
     process (clk)
     begin
         if rising_edge(clk) then
-            if cnt = tick_max then
-                cnt <= 0;
-            else
-                cnt <= cnt + 1;
-            end if;
+            if sw9_sync = '1' then 
+                if cnt >= (tick_max * 5) then
+                    cnt <= 0; 
+                else 
+                    cnt <= cnt + 1; 
+                end if;
+
+            else    
+                if cnt = tick_max then
+                    cnt <= 0;
+                else
+                    cnt <= cnt + 1;
+                end if;
 
             -- pixel tick divider: one-cycle pulse every 4 clk
             if pix_cnt = 3 then
@@ -55,7 +64,9 @@ begin
         end if;
     end process;
 
-    tick <= '1' when cnt = tick_max else
+    tick <= '1' when 
+        ((sw9_sync = '1' and cnt = (tick_max * 5)) or (sw9_sync = '0' and cnt = (tick_max * 5) ))
+        else
             '0';
     p_tick <= '1' when pix_cnt = 0 else
               '0';
