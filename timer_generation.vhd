@@ -42,7 +42,7 @@ begin
     begin
         if rising_edge(clk) then
             if sw9_sync = '1' then 
-                if cnt >= (tick_max * 5) then
+                if cnt >= (tick_max / 5) then
                     cnt <= 0; 
                 else 
                     cnt <= cnt + 1; 
@@ -65,7 +65,7 @@ begin
     end process;
 
     tick <= '1' when 
-        ((sw9_sync = '1' and cnt = (tick_max * 5)) or (sw9_sync = '0' and cnt = (tick_max * 5) ))
+        ((sw9_sync = '1' and cnt = (tick_max / 5)) or (sw9_sync = '0' and cnt = (tick_max * 5) ))
         else
             '0';
     p_tick <= '1' when pix_cnt = 0 else
