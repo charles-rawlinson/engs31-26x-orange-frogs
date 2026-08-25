@@ -27,6 +27,7 @@ set_property -dict { PACKAGE_PIN V17 IOSTANDARD LVCMOS33 } [get_ports sw0]
 set_property -dict { PACKAGE_PIN V16 IOSTANDARD LVCMOS33 } [get_ports sw1]
 set_property -dict { PACKAGE_PIN W14 IOSTANDARD LVCMOS33 } [get_ports sw6]
 set_property -dict { PACKAGE_PIN W13 IOSTANDARD LVCMOS33 } [get_ports sw7]
+set_property -dict { PACKAGE_PIN T3 IOSTANDARD LVCMOS33 } [get_ports sw9]
 
 ## buttons
 set_property -dict { PACKAGE_PIN U18 IOSTANDARD LVCMOS33 } [get_ports btn_center]
