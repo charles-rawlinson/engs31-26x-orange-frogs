@@ -39,9 +39,9 @@ entity top is
         btn_up : in std_logic;
         btn_down : in std_logic;
         btn_center : in std_logic;
-        sw6 : in std_logic; 
-        sw7 : in std_logic; 
-        sw9 : in std_logic; 
+        sw6 : in std_logic;
+        sw7 : in std_logic;
+        sw9 : in std_logic;
         vga_hs : out std_logic;
         vga_vs : out std_logic;
         vga_r : out std_logic_vector(3 downto 0);
@@ -111,8 +111,8 @@ architecture rtl of top is
             btn_up_port : in std_logic;
             btn_down_port : in std_logic;
             btn_center_port : in std_logic;
-            sw6: in std_logic; 
-            sw6_db: out std_logic; 
+            sw6 : in std_logic;
+            sw6_db : out std_logic;
             reset_db : out std_logic;
             start_stop_db : out std_logic;
             left_db : out std_logic;
@@ -171,8 +171,8 @@ architecture rtl of top is
             cursor_x : in integer;
             cursor_y : in integer;
             sw0_sync : in std_logic;
-            sw6_db : in std_logic; 
-            sw7_sync : in std_logic; 
+            sw6_db : in std_logic;
+            sw7_sync : in std_logic;
             vga_r : out std_logic_vector(3 downto 0);
             vga_g : out std_logic_vector(3 downto 0);
             vga_b : out std_logic_vector(3 downto 0)
@@ -375,7 +375,7 @@ begin
         dina => (others => '0'),
         douta => image_data
     );
-    
+
     tad_mode_image : blk_mem_gen_1
     port map(
         clka => clk,

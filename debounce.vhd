@@ -36,8 +36,8 @@ entity debouncer is
         btn_up_port : in std_logic;
         btn_down_port : in std_logic;
         btn_center_port : in std_logic;
-        sw6: in std_logic;
-        sw6_db: out std_logic;
+        sw6 : in std_logic;
+        sw6_db : out std_logic;
         reset_db : out std_logic; -- debounced reset
         start_stop_db : out std_logic; -- debounced start/stop
         left_db : out std_logic; -- debounced left
@@ -50,7 +50,7 @@ entity debouncer is
         up_mp : out std_logic; -- up monopulse
         down_mp : out std_logic; -- down monopulse
         center_mp : out std_logic -- center monopulse
-        
+
     );
 end entity debouncer;
 
@@ -79,7 +79,7 @@ architecture rtl of debouncer is
 
     signal center_sync_0 : std_logic := '0';
     signal center_sync_1 : std_logic := '0';
-    
+
     signal sw6_sync_0 : std_logic := '0';
     signal sw6_sync_1 : std_logic := '0';
 
@@ -138,7 +138,7 @@ begin
 
             center_sync_0 <= btn_center_port;
             center_sync_1 <= center_sync_0;
-            
+
             sw6_sync_0 <= sw6;
             sw6_sync_1 <= sw6_sync_0;
 
@@ -190,7 +190,7 @@ begin
             left_previous <= left_stable;
         end if;
     end process left_process;
-    
+
     sw6_process : process (clk)
     begin
         if rising_edge(clk) then
@@ -291,7 +291,7 @@ begin
 
     reset_db <= reset_stable;
     start_stop_db <= start_stop_stable;
-    
-    sw6_db <= sw6_stable; 
+
+    sw6_db <= sw6_stable;
 
 end architecture rtl;

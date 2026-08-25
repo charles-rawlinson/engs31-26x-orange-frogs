@@ -42,7 +42,7 @@ entity vga_graphics is
         cursor_x : in integer;
         cursor_y : in integer;
         sw0_sync : in std_logic;
-        sw6_db : in std_logic; 
+        sw6_db : in std_logic;
         sw7_sync : in std_logic;
         vga_r : out std_logic_vector(3 downto 0);
         vga_g : out std_logic_vector(3 downto 0);
@@ -68,9 +68,9 @@ architecture rtl of vga_graphics is
     signal r_smooth, g_smooth, b_smooth : std_logic_vector(3 downto 0);
 
     signal red, grn, blu : std_logic_vector(3 downto 0);
-    
+
     --for tad mode
-    signal tad_counter: integer range 0 to 50000; 
+    signal tad_counter : integer range 0 to 50000;
 
 begin
 
@@ -101,23 +101,21 @@ begin
             end if;
         end if;
     end process scroll_anim;
-    
+
     tad_mode : process (clk)
-    begin 
+    begin
         if rising_edge (clk) then
-            if frame_tick = '1' then 
-                if sw6_db = '1' then 
+            if frame_tick = '1' then
+                if sw6_db = '1' then
                     if tad_counter < 50000 then
                         tad_counter <= tad_counter + 1;
                     end if;
-                else 
+                else
                     tad_counter <= 0;
-                end if; 
+                end if;
             end if;
-        end if; 
+        end if;
     end process;
-        
-        
 
     -- concurrent signal assignments
     x_within_cell <= x_pix mod cell_size when x_pix >= 0 else
@@ -159,20 +157,20 @@ begin
                         grn <= "0000";
                         blu <= "0000";
                         -- live cells with smooth scrolling rainbow
-                    elsif game_grid(cell_index) = '1' then 
+                    elsif game_grid(cell_index) = '1' then
                         if sw7_sync = '1' then -- rainbow gradient switch
                             red <= r_smooth;
                             grn <= g_smooth;
                             blu <= b_smooth;
-                        else 
+                        else
                             red <= "1111";
                             grn <= "0110";
                             blu <= "0101";
-                        -- dead cells in black
-                        end if; 
+                            -- dead cells in black
+                        end if;
                     else
                         if sw6_db = '1' then
-                            if (tad_counter < 10000) or (tad_counter >= 20000 and tad_counter < 30000) or (tad_counter >= 40000 and tad_counter < 50000) then 
+                            if (tad_counter < 10000) or (tad_counter >= 20000 and tad_counter < 30000) or (tad_counter >= 40000 and tad_counter < 50000) then
                                 red <= tad_data(11 downto 8);
                                 grn <= tad_data(7 downto 4);
                                 blu <= tad_data(3 downto 0); -- tad switch 
@@ -185,7 +183,7 @@ begin
                             red <= "0000";
                             grn <= "0000";
                             blu <= "0000";
-                        end if; 
+                        end if;
                     end if;
                 else
                     -- out of bounds, draw blue

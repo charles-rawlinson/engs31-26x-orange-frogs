@@ -177,7 +177,7 @@ begin
     end process cursor_process;
 
     -- Outputs
-            
+
     cursor_x <= cursor_x_reg;
     cursor_y <= cursor_y_reg;
 
