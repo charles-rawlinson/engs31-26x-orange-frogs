@@ -36,6 +36,8 @@ entity debouncer is
         btn_up_port : in std_logic;
         btn_down_port : in std_logic;
         btn_center_port : in std_logic;
+        sw6: in std_logic;
+        sw6_db: out std_logic;
         reset_db : out std_logic; -- debounced reset
         start_stop_db : out std_logic; -- debounced start/stop
         left_db : out std_logic; -- debounced left
@@ -48,6 +50,7 @@ entity debouncer is
         up_mp : out std_logic; -- up monopulse
         down_mp : out std_logic; -- down monopulse
         center_mp : out std_logic -- center monopulse
+        
     );
 end entity debouncer;
 
@@ -76,6 +79,9 @@ architecture rtl of debouncer is
 
     signal center_sync_0 : std_logic := '0';
     signal center_sync_1 : std_logic := '0';
+    
+    signal sw6_sync_0 : std_logic := '0';
+    signal sw6_sync_1 : std_logic := '0';
 
     -- debounced values
     signal reset_stable : std_logic := '0';
@@ -85,6 +91,7 @@ architecture rtl of debouncer is
     signal up_stable : std_logic := '0';
     signal down_stable : std_logic := '0';
     signal center_stable : std_logic := '0';
+    signal sw6_stable : std_logic := '0';
 
     -- previous debounced values
     signal left_previous : std_logic := '0';
@@ -92,6 +99,7 @@ architecture rtl of debouncer is
     signal up_previous : std_logic := '0';
     signal down_previous : std_logic := '0';
     signal center_previous : std_logic := '0';
+    signal sw6_previous : std_logic := '0';
 
     -- debounce counters
     signal reset_count : integer range 0 to STABLE_CYCLES := 0;
@@ -102,6 +110,7 @@ architecture rtl of debouncer is
     signal up_count : integer range 0 to STABLE_CYCLES := 0;
     signal down_count : integer range 0 to STABLE_CYCLES := 0;
     signal center_count : integer range 0 to STABLE_CYCLES := 0;
+    signal sw6_count : integer range 0 to STABLE_CYCLES := 0;
 
 begin
     -- synchronizer
@@ -129,6 +138,9 @@ begin
 
             center_sync_0 <= btn_center_port;
             center_sync_1 <= center_sync_0;
+            
+            sw6_sync_0 <= sw6;
+            sw6_sync_1 <= sw6_sync_0;
 
         end if;
     end process synchronize;
@@ -178,6 +190,21 @@ begin
             left_previous <= left_stable;
         end if;
     end process left_process;
+    
+    sw6_process : process (clk)
+    begin
+        if rising_edge(clk) then
+            --debounce
+            if sw6_sync_1 = sw6_stable then
+                sw6_count <= 0;
+            elsif sw6_count = STABLE_CYCLES then
+                sw6_stable <= sw6_sync_1;
+                sw6_count <= 0;
+            else
+                sw6_count <= sw6_count + 1;
+            end if;
+        end if;
+    end process sw6_process;
 
     right_process : process (clk)
     begin
@@ -264,5 +291,7 @@ begin
 
     reset_db <= reset_stable;
     start_stop_db <= start_stop_stable;
+    
+    sw6_db <= sw6_stable; 
 
 end architecture rtl;
