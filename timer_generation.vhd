@@ -54,21 +54,30 @@ begin
                 else
                     cnt <= cnt + 1;
                 end if;
-
-                -- pixel tick divider: one-cycle pulse every 4 clk
-                if pix_cnt = 3 then
-                    pix_cnt <= 0;
-                else
-                    pix_cnt <= pix_cnt + 1;
-                end if;
             end if;
-        end process;
 
-        tick <= '1' when
-                ((sw9_sync = '1' and cnt = (tick_max / 5)) or (sw9_sync = '0' and cnt = tick_max))
-                else
-                '0';
-        p_tick <= '1' when pix_cnt = 0 else
-                  '0';
+            -- pixel tick divider: one-cycle pulse every 4 clk
+            if pix_cnt = 3 then
+                pix_cnt <= 0;
+            else
+                pix_cnt <= pix_cnt + 1;
+            end if;
+        end if;
+    end process;
 
-    end architecture rtl;
+    process (sw9_sync, cnt, pix_cnt)
+    begin
+        tick   <= '0';
+        p_tick <= '0';
+
+        if (sw9_sync = '1' and cnt = (tick_max / 5)) or
+           (sw9_sync = '0' and cnt = tick_max) then
+            tick <= '1';
+        end if;
+
+        if pix_cnt = 0 then
+            p_tick <= '1';
+        end if;
+    end process;
+
+end architecture rtl;
