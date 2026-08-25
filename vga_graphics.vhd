@@ -38,10 +38,11 @@ entity vga_graphics is
         cell_index : in integer;
         game_grid : in std_logic_vector(1199 downto 0);
         image_data : in std_logic_vector(11 downto 0);
+        tad_data : in std_logic_vector(11 downto 0);
         cursor_x : in integer;
         cursor_y : in integer;
         sw0_sync : in std_logic;
-        sw6_sync : in std_logic; 
+        sw6_db : in std_logic; 
         sw7_sync : in std_logic;
         vga_r : out std_logic_vector(3 downto 0);
         vga_g : out std_logic_vector(3 downto 0);
@@ -67,6 +68,9 @@ architecture rtl of vga_graphics is
     signal r_smooth, g_smooth, b_smooth : std_logic_vector(3 downto 0);
 
     signal red, grn, blu : std_logic_vector(3 downto 0);
+    
+    --for tad mode
+    signal tad_counter: integer range 0 to 50000; 
 
 begin
 
@@ -83,7 +87,7 @@ begin
     scroll_anim : process (clk)
     begin
         if rising_edge(clk) then
-            if frame_tick = '1' then0
+            if frame_tick = '1' then
                 if frame_div < 59 then
                     frame_div <= frame_div + 1;
                 else
@@ -97,6 +101,23 @@ begin
             end if;
         end if;
     end process scroll_anim;
+    
+    tad_mode : process (clk)
+    begin 
+        if rising_edge (clk) then
+            if frame_tick = '1' then 
+                if sw6_db = '1' then 
+                    if tad_counter < 50000 then
+                        tad_counter <= tad_counter + 1;
+                    end if;
+                else 
+                    tad_counter <= 0;
+                end if; 
+            end if;
+        end if; 
+    end process;
+        
+        
 
     -- concurrent signal assignments
     x_within_cell <= x_pix mod cell_size when x_pix >= 0 else
@@ -123,7 +144,7 @@ begin
                 "1111";
 
     -- draw process
-    draw : process (video_on, x_pix, y_pix, cell_x, cell_y, cell_index, game_grid, cursor_x, cursor_y, sw0_sync, sw6_sync, sw7_sync, on_border, r_smooth, g_smooth, b_smooth)
+    draw : process (video_on, x_pix, y_pix, cell_x, cell_y, cell_index, game_grid, cursor_x, cursor_y, sw0_sync, sw6_db, sw7_sync, on_border, r_smooth, g_smooth, b_smooth, tad_counter)
     begin
         if video_on = '0' then
             red <= "0000";
@@ -150,10 +171,16 @@ begin
                         -- dead cells in black
                         end if; 
                     else
-                        if sw6_sync = '1' then -- tad switch 
-                            red <= image_data(11 downto 8);
-                            grn <= image_data(7 downto 4);
-                            blu <= image_data(3 downto 0);
+                        if sw6_db = '1' then
+                            if (tad_counter < 10000) or (tad_counter >= 20000 and tad_counter < 30000) or (tad_counter >= 40000 and tad_counter < 50000) then 
+                                red <= tad_data(11 downto 8);
+                                grn <= tad_data(7 downto 4);
+                                blu <= tad_data(3 downto 0); -- tad switch 
+                            else
+                                red <= image_data(11 downto 8);
+                                grn <= image_data(7 downto 4);
+                                blu <= image_data(3 downto 0);
+                            end if;
                         else
                             red <= "0000";
                             grn <= "0000";
