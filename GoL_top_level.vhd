@@ -76,7 +76,7 @@ architecture rtl of top is
             clk : in std_logic;
             tick : out std_logic;
             p_tick : out std_logic;
-            sw9_sync : in std_logic; 
+            sw9_sync : in std_logic
 
         );
     end component;
@@ -111,6 +111,8 @@ architecture rtl of top is
             btn_up_port : in std_logic;
             btn_down_port : in std_logic;
             btn_center_port : in std_logic;
+            sw6: in std_logic; 
+            sw6_db: out std_logic; 
             reset_db : out std_logic;
             start_stop_db : out std_logic;
             left_db : out std_logic;
@@ -165,10 +167,11 @@ architecture rtl of top is
             cell_index : in integer;
             game_grid : in std_logic_vector(1199 downto 0);
             image_data : in std_logic_vector(11 downto 0);
+            tad_data : in std_logic_vector(11 downto 0);
             cursor_x : in integer;
             cursor_y : in integer;
             sw0_sync : in std_logic;
-            sw6_sync : in std_logic; 
+            sw6_db : in std_logic; 
             sw7_sync : in std_logic; 
             vga_r : out std_logic_vector(3 downto 0);
             vga_g : out std_logic_vector(3 downto 0);
@@ -190,16 +193,17 @@ architecture rtl of top is
     signal sw1_sync : std_logic := '0';
     signal sw0_meta : std_logic := '0';
     signal sw0_sync : std_logic := '0';
-    signal sw6_meta : std_logic := '0';
-    signal sw6_sync : std_logic := '0';
     signal sw7_meta : std_logic := '0';
     signal sw7_sync : std_logic := '0';
     signal sw9_meta : std_logic := '0';
     signal sw9_sync : std_logic := '0';
+    signal sw6_db : std_logic := '0';
 
     --TAD signals
     signal image_address : std_logic_vector (14 downto 0);
     signal image_data : std_logic_vector (11 downto 0);
+    signal tad_address : std_logic_vector (14 downto 0);
+    signal tad_data : std_logic_vector (11 downto 0);
     signal image_x : integer;
     signal image_y : integer;
     -- debouncer signals
@@ -219,8 +223,6 @@ begin
             sw1_sync <= sw1_meta;
             sw0_meta <= sw0;
             sw0_sync <= sw0_meta;
-            sw6_meta <= sw6;
-            sw6_sync <= sw6_meta;
             sw7_meta <= sw7;
             sw7_sync <= sw7_meta;
             sw9_meta <= sw9;
@@ -275,6 +277,8 @@ begin
         btn_up_port => btn_up,
         btn_down_port => btn_down,
         btn_center_port => btn_center,
+        sw6 => sw6,
+        sw6_db => sw6_db,
         reset_db => open,
         start_stop_db => open,
         left_db => left_db,
@@ -328,10 +332,11 @@ begin
         cell_index => cell_index,
         game_grid => game_grid,
         image_data => image_data,
+        tad_data => tad_data,
         cursor_x => cursor_x_sig,
         cursor_y => cursor_y_sig,
         sw0_sync => sw0_sync,
-        sw6_sync => sw6_sync,
+        sw6_db => sw6_db,
         sw7_sync => sw7_sync,
         vga_r => red,
         vga_g => grn,
@@ -353,7 +358,7 @@ begin
     image_y <= y_pix / 4 when y_pix >= 0 else
                0;
     image_address <= std_logic_vector(to_unsigned((image_y * 160) + image_x, 15));
-
+    tad_address <= std_logic_vector(to_unsigned((image_y * 160) + image_x, 15));
     -- port assignments
     vga_r <= red;
     vga_g <= grn;
@@ -369,6 +374,15 @@ begin
         addra => image_address,
         dina => (others => '0'),
         douta => image_data
+    );
+    
+    tad_mode_image : blk_mem_gen_1
+    port map(
+        clka => clk,
+        wea => "0",
+        addra => tad_address,
+        dina => (others => '0'),
+        douta => tad_data
     );
 
 end architecture rtl;
