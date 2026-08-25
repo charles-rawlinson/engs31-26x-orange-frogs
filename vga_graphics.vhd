@@ -174,10 +174,14 @@ begin
                                 red <= tad_data(11 downto 8);
                                 grn <= tad_data(7 downto 4);
                                 blu <= tad_data(3 downto 0); -- tad switch 
-                            else
+                            elsif tad_counter >= 50000 then
                                 red <= image_data(11 downto 8);
                                 grn <= image_data(7 downto 4);
                                 blu <= image_data(3 downto 0);
+                            else 
+                                red <= "0000";
+                                grn <= "0000";
+                                blu <= "0000";
                             end if;
                         else
                             red <= "0000";
